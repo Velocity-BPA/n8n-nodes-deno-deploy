@@ -1,0 +1,85 @@
+{
+  "name": "n8n-nodes-deno-deploy",
+  "version": "1.0.0",
+  "description": "A comprehensive n8n community node for Deno Deploy providing 12 resources and 50+ operations for managing organizations, projects, deployments, domains, KV databases, and analytics. Includes polling trigger for deployment monitoring.",
+  "license": "BUSL-1.1",
+  "author": {
+    "name": "Velocity BPA",
+    "email": "licensing@velobpa.com",
+    "url": "https://velobpa.com"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Velocity-BPA/n8n-nodes-deno-deploy.git"
+  },
+  "homepage": "https://github.com/Velocity-BPA/n8n-nodes-deno-deploy#readme",
+  "bugs": {
+    "url": "https://github.com/Velocity-BPA/n8n-nodes-deno-deploy/issues"
+  },
+  "keywords": [
+    "n8n",
+    "n8n-community-node-package",
+    "n8n-node",
+    "deno",
+    "deno-deploy",
+    "serverless",
+    "edge",
+    "deployment",
+    "javascript",
+    "typescript",
+    "webassembly",
+    "subhosting",
+    "kv-database",
+    "automation",
+    "devops"
+  ],
+  "main": "dist/nodes/DenoDeploy/DenoDeploy.node.js",
+  "files": [
+    "dist"
+  ],
+  "n8n": {
+    "n8nNodesApiVersion": 1,
+    "credentials": [
+      "dist/credentials/DenoDeployApi.credentials.js"
+    ],
+    "nodes": [
+      "dist/nodes/DenoDeploy/DenoDeploy.node.js",
+      "dist/nodes/DenoDeploy/DenoDeployTrigger.node.js"
+    ]
+  },
+  "scripts": {
+    "build": "tsc && gulp build:icons",
+    "dev": "tsc --watch",
+    "lint": "eslint . --ext .ts",
+    "lint:fix": "eslint . --ext .ts --fix",
+    "format": "prettier --write \"**/*.ts\"",
+    "format:check": "prettier --check \"**/*.ts\"",
+    "test": "jest",
+    "test:watch": "jest --watch",
+    "test:coverage": "jest --coverage",
+    "prepublishOnly": "npm run build",
+    "clean": "rimraf dist"
+  },
+  "devDependencies": {
+    "@types/jest": "^29.5.12",
+    "@types/node": "^20.11.19",
+    "@typescript-eslint/eslint-plugin": "^7.0.2",
+    "@typescript-eslint/parser": "^7.0.2",
+    "eslint": "^8.56.0",
+    "eslint-config-prettier": "^9.1.0",
+    "eslint-plugin-n8n-nodes-base": "^1.16.1",
+    "gulp": "^4.0.2",
+    "jest": "^29.7.0",
+    "n8n-workflow": "^1.30.0",
+    "prettier": "^3.2.5",
+    "rimraf": "^5.0.5",
+    "ts-jest": "^29.1.2",
+    "typescript": "^5.3.3"
+  },
+  "peerDependencies": {
+    "n8n-workflow": "^1.30.0"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}
