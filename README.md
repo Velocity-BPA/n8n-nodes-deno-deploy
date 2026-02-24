@@ -1,6 +1,6 @@
 # n8n-nodes-deno-deploy
 
-> [Velocity BPA Licensing Notice]
+> **[Velocity BPA Licensing Notice]**
 >
 > This n8n node is licensed under the Business Source License 1.1 (BSL 1.1).
 >
@@ -8,288 +8,213 @@
 >
 > For licensing information, visit https://velobpa.com/licensing or contact licensing@velobpa.com.
 
-A comprehensive n8n community node for Deno Deploy, the globally distributed serverless JavaScript/TypeScript hosting platform. This node enables workflow automation for managing organizations, projects, deployments, domains, KV databases, and analytics through Deno Deploy's Subhosting REST API.
+This n8n community node enables seamless integration with Deno Deploy, providing access to 6 core resources including Organizations, Projects, Deployments, Domains, KV Databases, and Environment Variables. Automate your serverless JavaScript and TypeScript deployments, manage infrastructure, and streamline your edge computing workflows directly from n8n.
 
-![n8n](https://img.shields.io/badge/n8n-community--node-orange)
+![n8n Community Node](https://img.shields.io/badge/n8n-Community%20Node-blue)
 ![License](https://img.shields.io/badge/license-BSL--1.1-blue)
 ![TypeScript](https://img.shields.io/badge/TypeScript-5.3-blue)
-![Node.js](https://img.shields.io/badge/node-%3E%3D18.0.0-brightgreen)
+![Deno Deploy](https://img.shields.io/badge/Deno%20Deploy-API-00599C)
+![Edge Computing](https://img.shields.io/badge/Edge-Computing-green)
+![Serverless](https://img.shields.io/badge/Serverless-Ready-orange)
 
 ## Features
 
-- **12 Resource Categories** - Complete coverage of the Deno Deploy API
-- **50+ Operations** - Full CRUD operations for all resources
-- **Deployment Automation** - Create deployments with inline code or URL references
-- **Domain Management** - Add custom domains with automatic TLS certificate provisioning
-- **KV Database Support** - Manage Deno KV databases and bindings
-- **Analytics & Logging** - Retrieve organization, project, and deployment analytics
-- **Polling Trigger** - Monitor deployment status changes in real-time
-- **Environment Variables** - Securely manage project environment variables
+- **Project Management** - Create, update, and manage Deno Deploy projects with full lifecycle control
+- **Deployment Automation** - Deploy code from GitHub repositories or direct uploads with automated triggers
+- **Domain Configuration** - Manage custom domains, SSL certificates, and DNS settings for your applications
+- **Organization Control** - Handle team members, permissions, and organizational settings across projects
+- **KV Database Operations** - Interact with Deno KV databases for edge-native data storage and retrieval
+- **Environment Variables** - Securely manage configuration and secrets across different deployment environments
+- **Real-time Monitoring** - Track deployment status, logs, and performance metrics
+- **Edge Network Management** - Configure and optimize global edge deployment settings
 
 ## Installation
 
 ### Community Nodes (Recommended)
 
 1. Open n8n
-2. Go to **Settings** > **Community Nodes**
-3. Click **Install**
+2. Go to **Settings** → **Community Nodes**
+3. Click **Install a community node**
 4. Enter `n8n-nodes-deno-deploy`
 5. Click **Install**
 
 ### Manual Installation
 
 ```bash
-# Navigate to your n8n installation directory
 cd ~/.n8n
-
-# Install the package
 npm install n8n-nodes-deno-deploy
 ```
 
 ### Development Installation
 
 ```bash
-# Clone the repository
 git clone https://github.com/Velocity-BPA/n8n-nodes-deno-deploy.git
 cd n8n-nodes-deno-deploy
-
-# Install dependencies
 npm install
-
-# Build the project
 npm run build
-
-# Create symlink to n8n custom nodes directory
 mkdir -p ~/.n8n/custom
 ln -s $(pwd) ~/.n8n/custom/n8n-nodes-deno-deploy
-
-# Restart n8n
 n8n start
 ```
 
 ## Credentials Setup
 
-### Getting Your Access Token
-
-1. Log into [Deno Deploy Dashboard](https://dash.deno.com)
-2. Navigate to **Account Settings**
-3. Under **Access Tokens**, click **New Access Token**
-4. Provide a description and select permissions (read, write, admin)
-5. Click **Generate Token**
-6. Copy the token (shown only once)
-
-### Getting Your Organization ID
-
-Your organization ID is visible in the dashboard URL:
-```
-https://dash.deno.com/orgs/{organizationId}
-```
-
-### Configuring in n8n
-
-| Field | Description |
-|-------|-------------|
-| Access Token | Your Deno Deploy API access token |
-| Organization ID | Your organization ID from the dashboard URL |
+| Field | Description | Required |
+|-------|-------------|----------|
+| API Token | Deno Deploy API access token from your account settings | Yes |
+| Base URL | API base URL (defaults to https://dash.deno.com/api) | No |
 
 ## Resources & Operations
 
-### Organization
+### 1. Organizations
+
 | Operation | Description |
 |-----------|-------------|
-| Get | Get organization details |
-| Get Analytics | Get organization-wide analytics |
-| List Domains | List all domains in the organization |
+| Get | Retrieve organization details and settings |
+| List | List all organizations accessible to your account |
+| Update | Modify organization settings and configuration |
+| List Members | Get all members within an organization |
+| Invite Member | Send invitation to new organization member |
+| Remove Member | Remove member from organization |
 
-### Project
+### 2. Projects
+
 | Operation | Description |
 |-----------|-------------|
-| List | List all projects |
-| Create | Create a new project |
-| Get | Get project details |
-| Update | Update project configuration |
-| Delete | Delete a project |
-| Get Analytics | Get project analytics |
+| Create | Create a new Deno Deploy project |
+| Get | Retrieve project details and configuration |
+| List | List all projects in organization |
+| Update | Modify project settings and metadata |
+| Delete | Remove project and all associated resources |
+| Get Analytics | Retrieve project usage and performance analytics |
 
-### Deployment
+### 3. Deployments
+
 | Operation | Description |
 |-----------|-------------|
-| List | List all deployments |
-| Create | Create a new deployment with inline code or URL |
-| Get | Get deployment details |
-| Delete | Delete a deployment |
-| Redeploy | Create new deployment from existing |
-| Get Build Logs | Get build logs |
-| Get App Logs | Get application runtime logs |
+| Create | Deploy code from GitHub or upload source |
+| Get | Retrieve deployment details and status |
+| List | List all deployments for a project |
+| Delete | Remove specific deployment |
+| Get Logs | Fetch deployment logs and error messages |
+| Redeploy | Trigger redeployment of existing version |
 
-### Domain
+### 4. Domains
+
 | Operation | Description |
 |-----------|-------------|
-| List | List all domains |
-| Add | Add a custom domain |
-| Get | Get domain details |
-| Delete | Remove a domain |
-| Verify | Verify domain ownership |
-| Get Certificates | Get TLS certificates |
-| Provision Certificate | Provision TLS certificate |
+| Add | Associate custom domain with project |
+| Get | Retrieve domain configuration and status |
+| List | List all domains for a project |
+| Update | Modify domain settings and SSL configuration |
+| Remove | Remove domain association from project |
+| Verify | Verify domain ownership and DNS configuration |
 
-### KV Database
+### 5. KvDatabases
+
 | Operation | Description |
 |-----------|-------------|
-| List | List all KV databases |
-| Create | Create a new KV database |
-| Get | Get database details |
-| Update | Update database configuration |
-| Delete | Delete a database |
+| Create | Create new KV database instance |
+| Get | Retrieve KV database details and connection info |
+| List | List all KV databases in organization |
+| Delete | Remove KV database and all data |
+| Get Entry | Retrieve specific key-value entry |
+| Set Entry | Create or update key-value entry |
+| Delete Entry | Remove specific key-value entry |
+| List Entries | List all entries with optional filtering |
 
-### Build Log
+### 6. EnvironmentVariables
+
 | Operation | Description |
 |-----------|-------------|
-| Get | Get build logs for a deployment |
-
-### App Log
-| Operation | Description |
-|-----------|-------------|
-| Get | Get application runtime logs |
-| Query | Query logs with filters |
-
-### Environment Variable
-| Operation | Description |
-|-----------|-------------|
-| List | List all environment variables |
-| Set | Set environment variables |
-| Delete | Delete an environment variable |
-
-### Analytics
-| Operation | Description |
-|-----------|-------------|
-| Get Organization | Get organization-level analytics |
-| Get Project | Get project-level analytics |
-| Get Deployment | Get deployment-level analytics |
-
-### Certificate
-| Operation | Description |
-|-----------|-------------|
-| List | List certificates for a domain |
-| Provision | Provision a new certificate |
-| Get | Get certificate details |
-
-### Region
-| Operation | Description |
-|-----------|-------------|
-| List | List available deployment regions |
-
-### Playground
-| Operation | Description |
-|-----------|-------------|
-| Create | Create a playground deployment |
-| Get | Get playground details |
-| Delete | Delete a playground |
-
-## Trigger Node
-
-The **Deno Deploy Trigger** monitors deployment events using polling:
-
-| Event | Description |
-|-------|-------------|
-| Deployment Created | Triggers when a new deployment is created |
-| Deployment Success | Triggers when a deployment succeeds |
-| Deployment Failed | Triggers when a deployment fails |
-| Any Deployment Event | Triggers on any deployment status change |
+| Create | Add new environment variable to project |
+| Get | Retrieve environment variable value |
+| List | List all environment variables for project |
+| Update | Modify existing environment variable |
+| Delete | Remove environment variable from project |
+| Bulk Update | Update multiple environment variables at once |
 
 ## Usage Examples
 
-### Create a Simple Deployment
-
 ```javascript
-// Deployment code
-Deno.serve((req) => new Response("Hello from n8n!"));
+// Deploy a new project from GitHub
+{
+  "name": "my-api-project",
+  "type": "git",
+  "repository": {
+    "url": "https://github.com/username/deno-api",
+    "branch": "main",
+    "entrypoint": "main.ts"
+  },
+  "envVars": {
+    "DATABASE_URL": "postgresql://...",
+    "API_KEY": "secret-key"
+  }
+}
 ```
 
-1. Add a **Deno Deploy** node
-2. Select **Deployment** > **Create**
-3. Enter your Project ID
-4. Choose **Inline Code** and paste your code
-5. Execute the node
+```javascript
+// Create KV database entry
+{
+  "database": "user-sessions",
+  "key": "session:abc123",
+  "value": {
+    "userId": "user-456",
+    "expires": "2024-12-31T23:59:59Z",
+    "permissions": ["read", "write"]
+  },
+  "ttl": 86400
+}
+```
 
-### Deploy with Environment Variables
+```javascript
+// Configure custom domain
+{
+  "domain": "api.mycompany.com",
+  "project": "my-api-project",
+  "ssl": {
+    "enabled": true,
+    "certificateType": "letsencrypt"
+  },
+  "redirects": {
+    "www": true,
+    "apex": false
+  }
+}
+```
 
-1. Add a **Deno Deploy** node
-2. Select **Deployment** > **Create**
-3. Expand **Options**
-4. Add environment variables under **Environment Variables**
-5. Execute the node
-
-### Monitor Deployments
-
-1. Add a **Deno Deploy Trigger** node
-2. Enter your Project ID
-3. Select the event type to monitor
-4. Connect to your workflow actions
-
-## Deno Deploy Concepts
-
-### Projects
-Projects are the top-level containers for your deployments. Each project can have multiple deployments, custom domains, and environment variables.
-
-### Deployments
-Deployments are immutable snapshots of your code. When you create a deployment, Deno Deploy builds and distributes your code globally.
-
-### KV Databases
-Deno KV is a globally distributed key-value store. You can create databases and bind them to your deployments for persistent storage.
-
-### Regions
-Deno Deploy automatically distributes your code to multiple regions worldwide for low-latency access. Available regions include:
-- `gcp-us-east1`
-- `gcp-us-west1`
-- `gcp-europe-west4`
-- `gcp-asia-southeast1`
-- And more...
+```javascript
+// Update project environment variables
+{
+  "project": "my-api-project",
+  "variables": {
+    "NODE_ENV": "production",
+    "LOG_LEVEL": "info",
+    "CACHE_TTL": "3600"
+  },
+  "encrypted": ["API_SECRET", "DATABASE_PASSWORD"]
+}
+```
 
 ## Error Handling
 
-The node provides detailed error messages for common issues:
-
-| Error Code | Description |
-|------------|-------------|
-| 400 | Invalid parameters |
-| 401 | Invalid or missing access token |
-| 403 | Insufficient permissions |
-| 404 | Resource not found |
-| 409 | Resource conflict |
-| 422 | Validation error |
-| 429 | Rate limit exceeded |
-
-## Security Best Practices
-
-1. **Token Permissions**: Use the minimum required permissions for your access token
-2. **Environment Variables**: Store sensitive values in project environment variables, not in code
-3. **Token Rotation**: Regularly rotate your access tokens
-4. **Organization Access**: Limit access to your organization to trusted team members
+| Error | Description | Solution |
+|-------|-------------|----------|
+| 401 Unauthorized | Invalid or expired API token | Verify API token in credentials and regenerate if needed |
+| 403 Forbidden | Insufficient permissions for operation | Check organization membership and project permissions |
+| 404 Not Found | Project, deployment, or resource doesn't exist | Verify resource IDs and existence before operations |
+| 422 Validation Error | Invalid input data or configuration | Review request parameters against API documentation |
+| 429 Rate Limited | Too many requests to API | Implement retry logic with exponential backoff |
+| 500 Internal Error | Deno Deploy service error | Check Deno Deploy status page and retry after delay |
 
 ## Development
 
 ```bash
-# Install dependencies
 npm install
-
-# Build the project
 npm run build
-
-# Run tests
 npm test
-
-# Run tests with coverage
-npm run test:coverage
-
-# Lint code
 npm run lint
-
-# Fix linting issues
-npm run lint:fix
-
-# Format code
-npm run format
+npm run dev
 ```
 
 ## Author
@@ -308,28 +233,22 @@ Permitted for personal, educational, research, and internal business use.
 ### Commercial Use
 Use of this node within any SaaS, PaaS, hosted platform, managed service, or paid automation offering requires a commercial license.
 
-For licensing inquiries:
-**licensing@velobpa.com**
+For licensing inquiries: **licensing@velobpa.com**
 
 See [LICENSE](LICENSE), [COMMERCIAL_LICENSE.md](COMMERCIAL_LICENSE.md), and [LICENSING_FAQ.md](LICENSING_FAQ.md) for details.
 
 ## Contributing
 
-Contributions are welcome! Please ensure your pull requests:
+Contributions are welcome! Please ensure:
 
-1. Follow the existing code style
-2. Include tests for new functionality
-3. Update documentation as needed
-4. Pass all linting and test checks
+1. Code follows existing style conventions
+2. All tests pass (`npm test`)
+3. Linting passes (`npm run lint`)
+4. Documentation is updated for new features
+5. Commit messages are descriptive
 
 ## Support
 
 - **Issues**: [GitHub Issues](https://github.com/Velocity-BPA/n8n-nodes-deno-deploy/issues)
-- **Documentation**: [Deno Deploy Docs](https://docs.deno.com/deploy/)
-- **API Reference**: [Deno Deploy API](https://api.deno.com/v1/openapi.json)
-
-## Acknowledgments
-
-- [Deno](https://deno.land/) for the amazing runtime and platform
-- [n8n](https://n8n.io/) for the powerful workflow automation platform
-- The open-source community for inspiration and support
+- **Deno Deploy Docs**: [https://docs.deno.com/deploy/](https://docs.deno.com/deploy/)
+- **Deno Deploy API**: [https://docs.deno.com/deploy/api/](https://docs.deno.com/deploy/api/)
