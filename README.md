@@ -8,25 +8,25 @@
 >
 > For licensing information, visit https://velobpa.com/licensing or contact licensing@velobpa.com.
 
-This n8n community node enables seamless integration with Deno Deploy, providing access to 6 core resources including Organizations, Projects, Deployments, Domains, KV Databases, and Environment Variables. Automate your serverless JavaScript and TypeScript deployments, manage infrastructure, and streamline your edge computing workflows directly from n8n.
+An n8n community node for Deno Deploy, providing comprehensive integration with 6 core resources. Automate deployment workflows, manage serverless projects, configure domains and KV databases, and control environment variables programmatically through Deno's edge computing platform.
 
 ![n8n Community Node](https://img.shields.io/badge/n8n-Community%20Node-blue)
 ![License](https://img.shields.io/badge/license-BSL--1.1-blue)
 ![TypeScript](https://img.shields.io/badge/TypeScript-5.3-blue)
-![Deno Deploy](https://img.shields.io/badge/Deno%20Deploy-API-00599C)
+![Deno Deploy](https://img.shields.io/badge/Deno-Deploy-00ADD8)
 ![Edge Computing](https://img.shields.io/badge/Edge-Computing-green)
-![Serverless](https://img.shields.io/badge/Serverless-Ready-orange)
+![Serverless](https://img.shields.io/badge/Serverless-Functions-purple)
 
 ## Features
 
-- **Project Management** - Create, update, and manage Deno Deploy projects with full lifecycle control
-- **Deployment Automation** - Deploy code from GitHub repositories or direct uploads with automated triggers
-- **Domain Configuration** - Manage custom domains, SSL certificates, and DNS settings for your applications
-- **Organization Control** - Handle team members, permissions, and organizational settings across projects
-- **KV Database Operations** - Interact with Deno KV databases for edge-native data storage and retrieval
-- **Environment Variables** - Securely manage configuration and secrets across different deployment environments
-- **Real-time Monitoring** - Track deployment status, logs, and performance metrics
-- **Edge Network Management** - Configure and optimize global edge deployment settings
+- **Project Management** - Create, update, delete, and monitor Deno Deploy projects with full lifecycle control
+- **Deployment Operations** - Trigger deployments, check status, rollback versions, and manage deployment history
+- **Domain Configuration** - Add custom domains, manage SSL certificates, and configure DNS settings
+- **KV Database Integration** - Create and manage distributed key-value databases with edge storage capabilities
+- **Environment Variables** - Set, update, and delete environment variables across projects and deployments
+- **Organization Control** - Manage organization settings, members, and project permissions
+- **Real-time Monitoring** - Track deployment status, performance metrics, and error logs
+- **Edge Network Management** - Configure global distribution and regional deployment settings
 
 ## Installation
 
@@ -61,138 +61,116 @@ n8n start
 
 | Field | Description | Required |
 |-------|-------------|----------|
-| API Token | Deno Deploy API access token from your account settings | Yes |
-| Base URL | API base URL (defaults to https://dash.deno.com/api) | No |
+| API Key | Your Deno Deploy API access token from dashboard settings | Yes |
 
 ## Resources & Operations
 
-### 1. Organizations
-
-| Operation | Description |
-|-----------|-------------|
-| Get | Retrieve organization details and settings |
-| List | List all organizations accessible to your account |
-| Update | Modify organization settings and configuration |
-| List Members | Get all members within an organization |
-| Invite Member | Send invitation to new organization member |
-| Remove Member | Remove member from organization |
-
-### 2. Projects
+### 1. Project
 
 | Operation | Description |
 |-----------|-------------|
 | Create | Create a new Deno Deploy project |
 | Get | Retrieve project details and configuration |
-| List | List all projects in organization |
 | Update | Modify project settings and metadata |
-| Delete | Remove project and all associated resources |
-| Get Analytics | Retrieve project usage and performance analytics |
+| Delete | Remove a project and all associated resources |
+| List | Get all projects in the organization |
 
-### 3. Deployments
+### 2. Deployment
 
 | Operation | Description |
 |-----------|-------------|
-| Create | Deploy code from GitHub or upload source |
+| Create | Deploy code to a project |
 | Get | Retrieve deployment details and status |
-| List | List all deployments for a project |
-| Delete | Remove specific deployment |
-| Get Logs | Fetch deployment logs and error messages |
-| Redeploy | Trigger redeployment of existing version |
+| List | Get deployment history for a project |
+| Delete | Remove a specific deployment |
+| Rollback | Revert to a previous deployment version |
 
-### 4. Domains
-
-| Operation | Description |
-|-----------|-------------|
-| Add | Associate custom domain with project |
-| Get | Retrieve domain configuration and status |
-| List | List all domains for a project |
-| Update | Modify domain settings and SSL configuration |
-| Remove | Remove domain association from project |
-| Verify | Verify domain ownership and DNS configuration |
-
-### 5. KvDatabases
+### 3. Domain
 
 | Operation | Description |
 |-----------|-------------|
-| Create | Create new KV database instance |
+| Add | Associate a custom domain with a project |
+| Get | Retrieve domain configuration and SSL status |
+| Update | Modify domain settings and certificates |
+| Delete | Remove a domain from a project |
+| List | Get all domains for a project |
+| Verify | Check domain verification status |
+
+### 4. KV Database
+
+| Operation | Description |
+|-----------|-------------|
+| Create | Create a new KV database instance |
 | Get | Retrieve KV database details and connection info |
-| List | List all KV databases in organization |
-| Delete | Remove KV database and all data |
-| Get Entry | Retrieve specific key-value entry |
-| Set Entry | Create or update key-value entry |
-| Delete Entry | Remove specific key-value entry |
-| List Entries | List all entries with optional filtering |
+| Update | Modify KV database configuration |
+| Delete | Remove a KV database |
+| List | Get all KV databases in the organization |
 
-### 6. EnvironmentVariables
+### 5. Environment Variable
 
 | Operation | Description |
 |-----------|-------------|
-| Create | Add new environment variable to project |
+| Set | Create or update an environment variable |
 | Get | Retrieve environment variable value |
-| List | List all environment variables for project |
-| Update | Modify existing environment variable |
-| Delete | Remove environment variable from project |
-| Bulk Update | Update multiple environment variables at once |
+| Delete | Remove an environment variable |
+| List | Get all environment variables for a project |
+| Bulk Update | Set multiple environment variables at once |
+
+### 6. Organization
+
+| Operation | Description |
+|-----------|-------------|
+| Get | Retrieve organization details and settings |
+| Update | Modify organization configuration |
+| List Members | Get organization members and roles |
+| Invite Member | Send invitation to join organization |
+| Remove Member | Remove a member from organization |
 
 ## Usage Examples
 
 ```javascript
-// Deploy a new project from GitHub
+// Create a new Deno Deploy project
 {
   "name": "my-api-project",
-  "type": "git",
-  "repository": {
-    "url": "https://github.com/username/deno-api",
-    "branch": "main",
-    "entrypoint": "main.ts"
+  "description": "REST API for mobile app",
+  "envVars": {
+    "DATABASE_URL": "postgres://...",
+    "API_KEY": "secret123"
+  }
+}
+```
+
+```javascript
+// Deploy code to a project
+{
+  "projectId": "proj_abc123",
+  "entrypoint": "main.ts",
+  "files": {
+    "main.ts": "import { serve } from 'https://deno.land/std/http/server.ts';\n\nserve(() => new Response('Hello World!'));",
+    "deno.json": "{\"tasks\": {\"start\": \"deno run --allow-net main.ts\"}}"
   },
   "envVars": {
-    "DATABASE_URL": "postgresql://...",
-    "API_KEY": "secret-key"
+    "ENVIRONMENT": "production"
   }
 }
 ```
 
 ```javascript
-// Create KV database entry
+// Add custom domain to project
 {
-  "database": "user-sessions",
-  "key": "session:abc123",
-  "value": {
-    "userId": "user-456",
-    "expires": "2024-12-31T23:59:59Z",
-    "permissions": ["read", "write"]
-  },
-  "ttl": 86400
+  "projectId": "proj_abc123",
+  "domain": "api.myapp.com",
+  "certificateType": "automatic",
+  "redirectWWW": false
 }
 ```
 
 ```javascript
-// Configure custom domain
+// Create KV database and set values
 {
-  "domain": "api.mycompany.com",
-  "project": "my-api-project",
-  "ssl": {
-    "enabled": true,
-    "certificateType": "letsencrypt"
-  },
-  "redirects": {
-    "www": true,
-    "apex": false
-  }
-}
-```
-
-```javascript
-// Update project environment variables
-{
-  "project": "my-api-project",
-  "variables": {
-    "NODE_ENV": "production",
-    "LOG_LEVEL": "info",
-    "CACHE_TTL": "3600"
-  },
-  "encrypted": ["API_SECRET", "DATABASE_PASSWORD"]
+  "name": "user-sessions",
+  "description": "Store user session data",
+  "region": "us-east-1"
 }
 ```
 
@@ -200,12 +178,12 @@ n8n start
 
 | Error | Description | Solution |
 |-------|-------------|----------|
-| 401 Unauthorized | Invalid or expired API token | Verify API token in credentials and regenerate if needed |
-| 403 Forbidden | Insufficient permissions for operation | Check organization membership and project permissions |
-| 404 Not Found | Project, deployment, or resource doesn't exist | Verify resource IDs and existence before operations |
-| 422 Validation Error | Invalid input data or configuration | Review request parameters against API documentation |
-| 429 Rate Limited | Too many requests to API | Implement retry logic with exponential backoff |
-| 500 Internal Error | Deno Deploy service error | Check Deno Deploy status page and retry after delay |
+| 401 Unauthorized | Invalid or expired API key | Verify API key in Deno Deploy dashboard |
+| 403 Forbidden | Insufficient permissions | Check organization role and project access |
+| 404 Not Found | Project or resource doesn't exist | Verify resource IDs and organization |
+| 409 Conflict | Resource already exists or name taken | Use unique names or update existing resource |
+| 429 Rate Limited | Too many API requests | Implement delays between operations |
+| 500 Internal Error | Deno Deploy service issue | Check Deno Deploy status page and retry |
 
 ## Development
 
@@ -250,5 +228,5 @@ Contributions are welcome! Please ensure:
 ## Support
 
 - **Issues**: [GitHub Issues](https://github.com/Velocity-BPA/n8n-nodes-deno-deploy/issues)
-- **Deno Deploy Docs**: [https://docs.deno.com/deploy/](https://docs.deno.com/deploy/)
-- **Deno Deploy API**: [https://docs.deno.com/deploy/api/](https://docs.deno.com/deploy/api/)
+- **Deno Deploy API**: [Official API Documentation](https://docs.deno.com/deploy/api)
+- **Deno Deploy Docs**: [Platform Documentation](https://docs.deno.com/deploy)
