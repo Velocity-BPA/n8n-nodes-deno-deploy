@@ -6,18 +6,16 @@ import {
 export class DenoDeployApi implements ICredentialType {
 	name = 'denoDeployApi';
 	displayName = 'Deno Deploy API';
-	documentationUrl = 'https://docs.deno.com/deploy/api';
+	documentationUrl = 'https://docs.deno.com/deploy/api/';
 	properties: INodeProperties[] = [
 		{
 			displayName: 'Access Token',
 			name: 'accessToken',
 			type: 'string',
-			typeOptions: {
-				password: true,
-			},
+			typeOptions: { password: true },
 			default: '',
 			required: true,
-			description: 'The personal access token for Deno Deploy API authentication',
+			description: 'Personal access token for Deno Deploy API. Create one in your Deno Deploy dashboard under Account Settings > Access Tokens.',
 		},
 		{
 			displayName: 'API Base URL',
