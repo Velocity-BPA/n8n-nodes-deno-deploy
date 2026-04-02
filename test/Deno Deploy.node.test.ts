@@ -67,1234 +67,902 @@ describe('DenoDeploy Node', () => {
   });
 
   // Resource-specific tests
-describe('Organizations Resource', () => {
+describe('Project Resource', () => {
   let mockExecuteFunctions: any;
 
   beforeEach(() => {
     mockExecuteFunctions = {
       getNodeParameter: jest.fn(),
-      getCredentials: jest.fn().mockResolvedValue({
-        bearerToken: 'test-bearer-token',
-        baseUrl: 'https://api.deno.com/v1',
+      getCredentials: jest.fn().mockResolvedValue({ 
+        apiKey: 'test-key', 
+        baseUrl: 'https://api.deno.com/v1' 
       }),
       getInputData: jest.fn().mockReturnValue([{ json: {} }]),
       getNode: jest.fn().mockReturnValue({ name: 'Test Node' }),
       continueOnFail: jest.fn().mockReturnValue(false),
-      helpers: {
+      helpers: { 
         httpRequest: jest.fn(),
-        requestWithAuthentication: jest.fn(),
+        requestWithAuthentication: jest.fn() 
       },
     };
   });
 
-  describe('listOrganizations', () => {
-    it('should list organizations successfully', async () => {
-      const mockResponse = [
-        { id: 'org-1', name: 'Organization 1' },
-        { id: 'org-2', name: 'Organization 2' },
-      ];
+  it('should list projects successfully', async () => {
+    mockExecuteFunctions.getNodeParameter.mockReturnValue('listProjects');
+    mockExecuteFunctions.helpers.httpRequest.mockResolvedValue([
+      { id: 'project1', name: 'Test Project' }
+    ]);
 
-      mockExecuteFunctions.getNodeParameter.mockImplementation((paramName: string, itemIndex: number) => {
-        if (paramName === 'operation') return 'listOrganizations';
-        return '';
-      });
+    const result = await executeProjectOperations.call(mockExecuteFunctions, [{ json: {} }]);
 
-      mockExecuteFunctions.helpers.httpRequest.mockResolvedValue(mockResponse);
-
-      const items = [{ json: {} }];
-      const result = await executeOrganizationsOperations.call(mockExecuteFunctions, items);
-
-      expect(result).toHaveLength(1);
-      expect(result[0].json).toEqual(mockResponse);
-      expect(mockExecuteFunctions.helpers.httpRequest).toHaveBeenCalledWith({
-        method: 'GET',
-        url: 'https://api.deno.com/v1/organizations',
-        headers: {
-          'Authorization': 'Bearer test-bearer-token',
-          'Content-Type': 'application/json',
-        },
-        json: true,
-      });
-    });
-
-    it('should handle API errors', async () => {
-      mockExecuteFunctions.getNodeParameter.mockImplementation((paramName: string, itemIndex: number) => {
-        if (paramName === 'operation') return 'listOrganizations';
-        return '';
-      });
-
-      mockExecuteFunctions.helpers.httpRequest.mockRejectedValue(new Error('API Error'));
-
-      const items = [{ json: {} }];
-
-      await expect(executeOrganizationsOperations.call(mockExecuteFunctions, items))
-        .rejects.toThrow('API Error');
-    });
+    expect(result).toEqual([{
+      json: [{ id: 'project1', name: 'Test Project' }],
+      pairedItem: { item: 0 }
+    }]);
   });
 
-  describe('getOrganization', () => {
-    it('should get organization details successfully', async () => {
-      const mockResponse = { id: 'org-1', name: 'Test Organization', description: 'Test Description' };
-
-      mockExecuteFunctions.getNodeParameter.mockImplementation((paramName: string, itemIndex: number) => {
-        if (paramName === 'operation') return 'getOrganization';
-        if (paramName === 'orgId') return 'org-1';
-        return '';
-      });
-
-      mockExecuteFunctions.helpers.httpRequest.mockResolvedValue(mockResponse);
-
-      const items = [{ json: {} }];
-      const result = await executeOrganizationsOperations.call(mockExecuteFunctions, items);
-
-      expect(result).toHaveLength(1);
-      expect(result[0].json).toEqual(mockResponse);
-      expect(mockExecuteFunctions.helpers.httpRequest).toHaveBeenCalledWith({
-        method: 'GET',
-        url: 'https://api.deno.com/v1/organizations/org-1',
-        headers: {
-          'Authorization': 'Bearer test-bearer-token',
-          'Content-Type': 'application/json',
-        },
-        json: true,
-      });
+  it('should create project successfully', async () => {
+    mockExecuteFunctions.getNodeParameter
+      .mockReturnValueOnce('createProject')
+      .mockReturnValueOnce('My Project')
+      .mockReturnValueOnce('git');
+    
+    mockExecuteFunctions.helpers.httpRequest.mockResolvedValue({
+      id: 'new-project-id',
+      name: 'My Project',
+      type: 'git'
     });
 
-    it('should throw error when orgId is missing', async () => {
-      mockExecuteFunctions.getNodeParameter.mockImplementation((paramName: string, itemIndex: number) => {
-        if (paramName === 'operation') return 'getOrganization';
-        if (paramName === 'orgId') return '';
-        return '';
-      });
+    const result = await executeProjectOperations.call(mockExecuteFunctions, [{ json: {} }]);
 
-      const items = [{ json: {} }];
-
-      await expect(executeOrganizationsOperations.call(mockExecuteFunctions, items))
-        .rejects.toThrow('Organization ID is required');
-    });
+    expect(result).toEqual([{
+      json: { id: 'new-project-id', name: 'My Project', type: 'git' },
+      pairedItem: { item: 0 }
+    }]);
   });
 
-  describe('updateOrganization', () => {
-    it('should update organization successfully', async () => {
-      const mockResponse = { id: 'org-1', name: 'Updated Organization', description: 'Updated Description' };
-
-      mockExecuteFunctions.getNodeParameter.mockImplementation((paramName: string, itemIndex: number) => {
-        if (paramName === 'operation') return 'updateOrganization';
-        if (paramName === 'orgId') return 'org-1';
-        if (paramName === 'name') return 'Updated Organization';
-        if (paramName === 'description') return 'Updated Description';
-        return '';
-      });
-
-      mockExecuteFunctions.helpers.httpRequest.mockResolvedValue(mockResponse);
-
-      const items = [{ json: {} }];
-      const result = await executeOrganizationsOperations.call(mockExecuteFunctions, items);
-
-      expect(result).toHaveLength(1);
-      expect(result[0].json).toEqual(mockResponse);
-      expect(mockExecuteFunctions.helpers.httpRequest).toHaveBeenCalledWith({
-        method: 'PATCH',
-        url: 'https://api.deno.com/v1/organizations/org-1',
-        headers: {
-          'Authorization': 'Bearer test-bearer-token',
-          'Content-Type': 'application/json',
-        },
-        body: {
-          name: 'Updated Organization',
-          description: 'Updated Description',
-        },
-        json: true,
-      });
+  it('should get project successfully', async () => {
+    mockExecuteFunctions.getNodeParameter
+      .mockReturnValueOnce('getProject')
+      .mockReturnValueOnce('project123');
+    
+    mockExecuteFunctions.helpers.httpRequest.mockResolvedValue({
+      id: 'project123',
+      name: 'Test Project'
     });
 
-    it('should throw error when no update fields provided', async () => {
-      mockExecuteFunctions.getNodeParameter.mockImplementation((paramName: string, itemIndex: number) => {
-        if (paramName === 'operation') return 'updateOrganization';
-        if (paramName === 'orgId') return 'org-1';
-        return '';
-      });
+    const result = await executeProjectOperations.call(mockExecuteFunctions, [{ json: {} }]);
 
-      const items = [{ json: {} }];
+    expect(result).toEqual([{
+      json: { id: 'project123', name: 'Test Project' },
+      pairedItem: { item: 0 }
+    }]);
+  });
 
-      await expect(executeOrganizationsOperations.call(mockExecuteFunctions, items))
-        .rejects.toThrow('At least one field (name or description) must be provided for update');
+  it('should update project successfully', async () => {
+    mockExecuteFunctions.getNodeParameter
+      .mockReturnValueOnce('updateProject')
+      .mockReturnValueOnce('project123')
+      .mockReturnValueOnce('Updated Project')
+      .mockReturnValueOnce('main');
+    
+    mockExecuteFunctions.helpers.httpRequest.mockResolvedValue({
+      id: 'project123',
+      name: 'Updated Project',
+      productionBranch: 'main'
     });
 
-    it('should throw error when orgId is missing', async () => {
-      mockExecuteFunctions.getNodeParameter.mockImplementation((paramName: string, itemIndex: number) => {
-        if (paramName === 'operation') return 'updateOrganization';
-        if (paramName === 'orgId') return '';
-        if (paramName === 'name') return 'Updated Name';
-        return '';
-      });
+    const result = await executeProjectOperations.call(mockExecuteFunctions, [{ json: {} }]);
 
-      const items = [{ json: {} }];
+    expect(result).toEqual([{
+      json: { id: 'project123', name: 'Updated Project', productionBranch: 'main' },
+      pairedItem: { item: 0 }
+    }]);
+  });
 
-      await expect(executeOrganizationsOperations.call(mockExecuteFunctions, items))
-        .rejects.toThrow('Organization ID is required');
-    });
+  it('should delete project successfully', async () => {
+    mockExecuteFunctions.getNodeParameter
+      .mockReturnValueOnce('deleteProject')
+      .mockReturnValueOnce('project123');
+    
+    mockExecuteFunctions.helpers.httpRequest.mockResolvedValue({ success: true });
+
+    const result = await executeProjectOperations.call(mockExecuteFunctions, [{ json: {} }]);
+
+    expect(result).toEqual([{
+      json: { success: true },
+      pairedItem: { item: 0 }
+    }]);
+  });
+
+  it('should handle errors gracefully when continueOnFail is true', async () => {
+    mockExecuteFunctions.getNodeParameter.mockReturnValue('listProjects');
+    mockExecuteFunctions.continueOnFail.mockReturnValue(true);
+    mockExecuteFunctions.helpers.httpRequest.mockRejectedValue(new Error('API Error'));
+
+    const result = await executeProjectOperations.call(mockExecuteFunctions, [{ json: {} }]);
+
+    expect(result).toEqual([{
+      json: { error: 'API Error' },
+      pairedItem: { item: 0 }
+    }]);
   });
 });
 
-describe('Projects Resource', () => {
+describe('Deployment Resource', () => {
   let mockExecuteFunctions: any;
 
   beforeEach(() => {
     mockExecuteFunctions = {
       getNodeParameter: jest.fn(),
       getCredentials: jest.fn().mockResolvedValue({
-        token: 'test-api-key',
-        baseUrl: 'https://api.deno.com/v1',
+        bearerToken: 'test-token',
+        baseUrl: 'https://api.deno.com/v1'
       }),
       getInputData: jest.fn().mockReturnValue([{ json: {} }]),
       getNode: jest.fn().mockReturnValue({ name: 'Test Node' }),
       continueOnFail: jest.fn().mockReturnValue(false),
       helpers: {
         httpRequest: jest.fn(),
-        requestWithAuthentication: jest.fn(),
+        requestWithAuthentication: jest.fn()
       },
     };
   });
 
-  test('should list projects successfully', async () => {
-    const mockProjects = [
-      { id: 'project1', name: 'Test Project 1', type: 'static' },
-      { id: 'project2', name: 'Test Project 2', type: 'playground' },
-    ];
+  test('should list deployments successfully', async () => {
+    const mockResponse = { deployments: [{ id: 'dep1', name: 'Test Deployment' }] };
+    mockExecuteFunctions.helpers.httpRequest.mockResolvedValue(mockResponse);
+    mockExecuteFunctions.getNodeParameter
+      .mockReturnValueOnce('listDeployments')
+      .mockReturnValueOnce('project-123')
+      .mockReturnValueOnce(1)
+      .mockReturnValueOnce(20);
 
-    mockExecuteFunctions.getNodeParameter.mockImplementation((param: string) => {
-      switch (param) {
-        case 'operation': return 'listProjects';
-        case 'orgId': return 'org123';
-        default: return undefined;
-      }
-    });
-    
-    mockExecuteFunctions.helpers.httpRequest.mockResolvedValue(mockProjects);
+    const result = await executeDeploymentOperations.call(mockExecuteFunctions, [{ json: {} }]);
 
-    const result = await executeProjectsOperations.call(mockExecuteFunctions, [{ json: {} }]);
-
+    expect(result).toHaveLength(1);
+    expect(result[0].json).toEqual(mockResponse);
     expect(mockExecuteFunctions.helpers.httpRequest).toHaveBeenCalledWith({
       method: 'GET',
-      url: 'https://api.deno.com/v1/organizations/org123/projects',
+      url: 'https://api.deno.com/v1/projects/project-123/deployments?page=1&limit=20',
       headers: {
-        'Authorization': 'Bearer test-api-key',
-        'Content-Type': 'application/json',
+        'Authorization': 'Bearer test-token',
+        'Content-Type': 'application/json'
       },
-      json: true,
+      json: true
     });
-    expect(result).toEqual([{ json: mockProjects, pairedItem: { item: 0 } }]);
   });
 
-  test('should create project successfully', async () => {
-    const mockProject = { id: 'project123', name: 'New Project', type: 'static' };
+  test('should handle list deployments error', async () => {
+    const errorMessage = 'API Error';
+    mockExecuteFunctions.helpers.httpRequest.mockRejectedValue(new Error(errorMessage));
+    mockExecuteFunctions.getNodeParameter
+      .mockReturnValueOnce('listDeployments')
+      .mockReturnValueOnce('project-123');
+    mockExecuteFunctions.continueOnFail.mockReturnValue(true);
 
-    mockExecuteFunctions.getNodeParameter.mockImplementation((param: string) => {
-      switch (param) {
-        case 'operation': return 'createProject';
-        case 'orgId': return 'org123';
-        case 'name': return 'New Project';
-        case 'type': return 'static';
-        default: return undefined;
-      }
-    });
-    
-    mockExecuteFunctions.helpers.httpRequest.mockResolvedValue(mockProject);
+    const result = await executeDeploymentOperations.call(mockExecuteFunctions, [{ json: {} }]);
 
-    const result = await executeProjectsOperations.call(mockExecuteFunctions, [{ json: {} }]);
+    expect(result).toHaveLength(1);
+    expect(result[0].json.error).toBe(errorMessage);
+  });
 
+  test('should create deployment successfully', async () => {
+    const mockResponse = { id: 'dep-123', status: 'created' };
+    mockExecuteFunctions.helpers.httpRequest.mockResolvedValue(mockResponse);
+    mockExecuteFunctions.getNodeParameter
+      .mockReturnValueOnce('createDeployment')
+      .mockReturnValueOnce('project-123')
+      .mockReturnValueOnce('https://example.com/main.ts')
+      .mockReturnValueOnce({ envVar: [{ name: 'NODE_ENV', value: 'production' }] })
+      .mockReturnValueOnce('{"target": "es2020"}');
+
+    const result = await executeDeploymentOperations.call(mockExecuteFunctions, [{ json: {} }]);
+
+    expect(result).toHaveLength(1);
+    expect(result[0].json).toEqual(mockResponse);
     expect(mockExecuteFunctions.helpers.httpRequest).toHaveBeenCalledWith({
       method: 'POST',
-      url: 'https://api.deno.com/v1/organizations/org123/projects',
+      url: 'https://api.deno.com/v1/projects/project-123/deployments',
       headers: {
-        'Authorization': 'Bearer test-api-key',
-        'Content-Type': 'application/json',
+        'Authorization': 'Bearer test-token',
+        'Content-Type': 'application/json'
       },
       body: {
-        name: 'New Project',
-        type: 'static',
+        entryPointUrl: 'https://example.com/main.ts',
+        envVars: { NODE_ENV: 'production' },
+        compilerOptions: { target: 'es2020' }
       },
-      json: true,
+      json: true
     });
-    expect(result).toEqual([{ json: mockProject, pairedItem: { item: 0 } }]);
   });
 
-  test('should get project successfully', async () => {
-    const mockProject = { id: 'project123', name: 'Test Project', type: 'static' };
+  test('should get deployment successfully', async () => {
+    const mockResponse = { id: 'dep-123', status: 'running' };
+    mockExecuteFunctions.helpers.httpRequest.mockResolvedValue(mockResponse);
+    mockExecuteFunctions.getNodeParameter
+      .mockReturnValueOnce('getDeployment')
+      .mockReturnValueOnce('dep-123');
 
-    mockExecuteFunctions.getNodeParameter.mockImplementation((param: string) => {
-      switch (param) {
-        case 'operation': return 'getProject';
-        case 'projectId': return 'project123';
-        default: return undefined;
-      }
-    });
-    
-    mockExecuteFunctions.helpers.httpRequest.mockResolvedValue(mockProject);
+    const result = await executeDeploymentOperations.call(mockExecuteFunctions, [{ json: {} }]);
 
-    const result = await executeProjectsOperations.call(mockExecuteFunctions, [{ json: {} }]);
-
+    expect(result).toHaveLength(1);
+    expect(result[0].json).toEqual(mockResponse);
     expect(mockExecuteFunctions.helpers.httpRequest).toHaveBeenCalledWith({
       method: 'GET',
-      url: 'https://api.deno.com/v1/projects/project123',
+      url: 'https://api.deno.com/v1/deployments/dep-123',
       headers: {
-        'Authorization': 'Bearer test-api-key',
-        'Content-Type': 'application/json',
+        'Authorization': 'Bearer test-token',
+        'Content-Type': 'application/json'
       },
-      json: true,
+      json: true
     });
-    expect(result).toEqual([{ json: mockProject, pairedItem: { item: 0 } }]);
   });
 
-  test('should update project successfully', async () => {
-    const mockProject = { id: 'project123', name: 'Updated Project', description: 'Updated description' };
-
-    mockExecuteFunctions.getNodeParameter.mockImplementation((param: string) => {
-      switch (param) {
-        case 'operation': return 'updateProject';
-        case 'projectId': return 'project123';
-        case 'name': return 'Updated Project';
-        case 'description': return 'Updated description';
-        default: return undefined;
-      }
-    });
-    
-    mockExecuteFunctions.helpers.httpRequest.mockResolvedValue(mockProject);
-
-    const result = await executeProjectsOperations.call(mockExecuteFunctions, [{ json: {} }]);
-
-    expect(mockExecuteFunctions.helpers.httpRequest).toHaveBeenCalledWith({
-      method: 'PATCH',
-      url: 'https://api.deno.com/v1/projects/project123',
-      headers: {
-        'Authorization': 'Bearer test-api-key',
-        'Content-Type': 'application/json',
-      },
-      body: {
-        name: 'Updated Project',
-        description: 'Updated description',
-      },
-      json: true,
-    });
-    expect(result).toEqual([{ json: mockProject, pairedItem: { item: 0 } }]);
-  });
-
-  test('should delete project successfully', async () => {
+  test('should delete deployment successfully', async () => {
     const mockResponse = { success: true };
-
-    mockExecuteFunctions.getNodeParameter.mockImplementation((param: string) => {
-      switch (param) {
-        case 'operation': return 'deleteProject';
-        case 'projectId': return 'project123';
-        default: return undefined;
-      }
-    });
-    
     mockExecuteFunctions.helpers.httpRequest.mockResolvedValue(mockResponse);
+    mockExecuteFunctions.getNodeParameter
+      .mockReturnValueOnce('deleteDeployment')
+      .mockReturnValueOnce('dep-123');
 
-    const result = await executeProjectsOperations.call(mockExecuteFunctions, [{ json: {} }]);
+    const result = await executeDeploymentOperations.call(mockExecuteFunctions, [{ json: {} }]);
 
+    expect(result).toHaveLength(1);
+    expect(result[0].json).toEqual(mockResponse);
     expect(mockExecuteFunctions.helpers.httpRequest).toHaveBeenCalledWith({
       method: 'DELETE',
-      url: 'https://api.deno.com/v1/projects/project123',
+      url: 'https://api.deno.com/v1/deployments/dep-123',
       headers: {
-        'Authorization': 'Bearer test-api-key',
-        'Content-Type': 'application/json',
+        'Authorization': 'Bearer test-token',
+        'Content-Type': 'application/json'
       },
-      json: true,
+      json: true
     });
-    expect(result).toEqual([{ json: mockResponse, pairedItem: { item: 0 } }]);
   });
 
-  test('should handle API errors', async () => {
-    mockExecuteFunctions.getNodeParameter.mockImplementation((param: string) => {
-      switch (param) {
-        case 'operation': return 'getProject';
-        case 'projectId': return 'invalid-project';
-        default: return undefined;
-      }
+  test('should redeploy deployment successfully', async () => {
+    const mockResponse = { id: 'dep-124', status: 'deploying' };
+    mockExecuteFunctions.helpers.httpRequest.mockResolvedValue(mockResponse);
+    mockExecuteFunctions.getNodeParameter
+      .mockReturnValueOnce('redeployDeployment')
+      .mockReturnValueOnce('dep-123');
+
+    const result = await executeDeploymentOperations.call(mockExecuteFunctions, [{ json: {} }]);
+
+    expect(result).toHaveLength(1);
+    expect(result[0].json).toEqual(mockResponse);
+    expect(mockExecuteFunctions.helpers.httpRequest).toHaveBeenCalledWith({
+      method: 'POST',
+      url: 'https://api.deno.com/v1/deployments/dep-123/redeploy',
+      headers: {
+        'Authorization': 'Bearer test-token',
+        'Content-Type': 'application/json'
+      },
+      json: true
     });
-    
-    const apiError = new Error('Project not found');
-    (apiError as any).httpCode = 404;
-    mockExecuteFunctions.helpers.httpRequest.mockRejectedValue(apiError);
-
-    await expect(executeProjectsOperations.call(mockExecuteFunctions, [{ json: {} }])).rejects.toThrow();
-  });
-
-  test('should continue on fail when enabled', async () => {
-    mockExecuteFunctions.continueOnFail.mockReturnValue(true);
-    mockExecuteFunctions.getNodeParameter.mockImplementation((param: string) => {
-      switch (param) {
-        case 'operation': return 'getProject';
-        case 'projectId': return 'invalid-project';
-        default: return undefined;
-      }
-    });
-    
-    mockExecuteFunctions.helpers.httpRequest.mockRejectedValue(new Error('Project not found'));
-
-    const result = await executeProjectsOperations.call(mockExecuteFunctions, [{ json: {} }]);
-
-    expect(result).toEqual([{ json: { error: 'Project not found' }, pairedItem: { item: 0 } }]);
   });
 });
 
-describe('Deployments Resource', () => {
+describe('Domain Resource', () => {
+	let mockExecuteFunctions: any;
+
+	beforeEach(() => {
+		mockExecuteFunctions = {
+			getNodeParameter: jest.fn(),
+			getCredentials: jest.fn().mockResolvedValue({
+				bearerToken: 'test-token',
+				baseUrl: 'https://api.deno.com/v1',
+			}),
+			getInputData: jest.fn().mockReturnValue([{ json: {} }]),
+			getNode: jest.fn().mockReturnValue({ name: 'Test Node' }),
+			continueOnFail: jest.fn().mockReturnValue(false),
+			helpers: {
+				httpRequest: jest.fn(),
+			},
+		};
+	});
+
+	it('should list domains successfully', async () => {
+		mockExecuteFunctions.getNodeParameter
+			.mockReturnValueOnce('listDomains')
+			.mockReturnValueOnce('project123');
+		
+		const mockResponse = [{ id: 'domain1', name: 'example.com' }];
+		mockExecuteFunctions.helpers.httpRequest.mockResolvedValue(mockResponse);
+
+		const result = await executeDomainOperations.call(
+			mockExecuteFunctions,
+			[{ json: {} }],
+		);
+
+		expect(result[0].json).toEqual(mockResponse);
+		expect(mockExecuteFunctions.helpers.httpRequest).toHaveBeenCalledWith({
+			method: 'GET',
+			url: 'https://api.deno.com/v1/projects/project123/domains',
+			headers: {
+				'Authorization': 'Bearer test-token',
+				'Content-Type': 'application/json',
+			},
+			json: true,
+		});
+	});
+
+	it('should create domain successfully', async () => {
+		mockExecuteFunctions.getNodeParameter
+			.mockReturnValueOnce('createDomain')
+			.mockReturnValueOnce('project123')
+			.mockReturnValueOnce('example.com');
+
+		const mockResponse = { id: 'domain1', name: 'example.com' };
+		mockExecuteFunctions.helpers.httpRequest.mockResolvedValue(mockResponse);
+
+		const result = await executeDomainOperations.call(
+			mockExecuteFunctions,
+			[{ json: {} }],
+		);
+
+		expect(result[0].json).toEqual(mockResponse);
+		expect(mockExecuteFunctions.helpers.httpRequest).toHaveBeenCalledWith({
+			method: 'POST',
+			url: 'https://api.deno.com/v1/projects/project123/domains',
+			headers: {
+				'Authorization': 'Bearer test-token',
+				'Content-Type': 'application/json',
+			},
+			body: {
+				domain: 'example.com',
+			},
+			json: true,
+		});
+	});
+
+	it('should get domain successfully', async () => {
+		mockExecuteFunctions.getNodeParameter
+			.mockReturnValueOnce('getDomain')
+			.mockReturnValueOnce('domain123');
+
+		const mockResponse = { id: 'domain123', name: 'example.com' };
+		mockExecuteFunctions.helpers.httpRequest.mockResolvedValue(mockResponse);
+
+		const result = await executeDomainOperations.call(
+			mockExecuteFunctions,
+			[{ json: {} }],
+		);
+
+		expect(result[0].json).toEqual(mockResponse);
+		expect(mockExecuteFunctions.helpers.httpRequest).toHaveBeenCalledWith({
+			method: 'GET',
+			url: 'https://api.deno.com/v1/domains/domain123',
+			headers: {
+				'Authorization': 'Bearer test-token',
+				'Content-Type': 'application/json',
+			},
+			json: true,
+		});
+	});
+
+	it('should handle errors when continueOnFail is true', async () => {
+		mockExecuteFunctions.getNodeParameter.mockReturnValueOnce('listDomains');
+		mockExecuteFunctions.continueOnFail.mockReturnValue(true);
+		mockExecuteFunctions.helpers.httpRequest.mockRejectedValue(new Error('API Error'));
+
+		const result = await executeDomainOperations.call(
+			mockExecuteFunctions,
+			[{ json: {} }],
+		);
+
+		expect(result[0].json.error).toBe('API Error');
+	});
+
+	it('should throw error when continueOnFail is false', async () => {
+		mockExecuteFunctions.getNodeParameter.mockReturnValueOnce('listDomains');
+		mockExecuteFunctions.continueOnFail.mockReturnValue(false);
+		mockExecuteFunctions.helpers.httpRequest.mockRejectedValue(new Error('API Error'));
+
+		await expect(
+			executeDomainOperations.call(mockExecuteFunctions, [{ json: {} }]),
+		).rejects.toThrow('API Error');
+	});
+});
+
+describe('KV Database Resource', () => {
   let mockExecuteFunctions: any;
 
   beforeEach(() => {
     mockExecuteFunctions = {
       getNodeParameter: jest.fn(),
-      getCredentials: jest.fn().mockResolvedValue({
-        apiKey: 'test-api-key',
-        baseUrl: 'https://api.deno.com/v1',
+      getCredentials: jest.fn().mockResolvedValue({ 
+        apiKey: 'test-key', 
+        baseUrl: 'https://api.deno.com/v1' 
       }),
       getInputData: jest.fn().mockReturnValue([{ json: {} }]),
       getNode: jest.fn().mockReturnValue({ name: 'Test Node' }),
       continueOnFail: jest.fn().mockReturnValue(false),
-      helpers: {
+      helpers: { 
         httpRequest: jest.fn(),
-        requestWithAuthentication: jest.fn(),
+        requestWithAuthentication: jest.fn() 
       },
     };
   });
 
-  describe('listDeployments', () => {
-    it('should list deployments successfully', async () => {
-      const mockResponse = {
-        deployments: [
-          { id: 'dep1', status: 'success', createdAt: '2023-01-01' },
-          { id: 'dep2', status: 'pending', createdAt: '2023-01-02' }
-        ],
-        total: 2
-      };
-
-      mockExecuteFunctions.getNodeParameter.mockImplementation((param: string) => {
-        switch (param) {
-          case 'operation': return 'listDeployments';
-          case 'projectId': return 'proj123';
-          case 'page': return 1;
-          case 'limit': return 20;
-          default: return undefined;
-        }
-      });
-
+  describe('listKvDatabases', () => {
+    it('should list KV databases successfully', async () => {
+      const mockResponse = [{ id: 'db1', description: 'Test DB' }];
+      mockExecuteFunctions.getNodeParameter
+        .mockReturnValueOnce('listKvDatabases')
+        .mockReturnValueOnce('org123');
       mockExecuteFunctions.helpers.httpRequest.mockResolvedValue(mockResponse);
 
-      const result = await executeDeploymentsOperations.call(
+      const result = await executeKvDatabaseOperations.call(
         mockExecuteFunctions,
-        [{ json: {} }],
+        [{ json: {} }]
       );
 
-      expect(result).toEqual([
-        { json: mockResponse, pairedItem: { item: 0 } },
-      ]);
-      expect(mockExecuteFunctions.helpers.httpRequest).toHaveBeenCalledWith({
-        method: 'GET',
-        url: 'https://api.deno.com/v1/projects/proj123/deployments?page=1&limit=20',
-        headers: {
-          'Authorization': 'Bearer test-api-key',
-          'Content-Type': 'application/json',
-        },
-        json: true,
-      });
-    });
-  });
-
-  describe('createDeployment', () => {
-    it('should create deployment successfully', async () => {
-      const mockResponse = {
-        id: 'dep123',
-        status: 'pending',
-        entryPointUrl: 'https://example.com/main.ts'
-      };
-
-      mockExecuteFunctions.getNodeParameter.mockImplementation((param: string) => {
-        switch (param) {
-          case 'operation': return 'createDeployment';
-          case 'projectId': return 'proj123';
-          case 'entryPointUrl': return 'https://example.com/main.ts';
-          case 'envVars': return { property: [{ name: 'NODE_ENV', value: 'production' }] };
-          case 'importMapUrl': return 'https://example.com/import-map.json';
-          default: return undefined;
-        }
-      });
-
-      mockExecuteFunctions.helpers.httpRequest.mockResolvedValue(mockResponse);
-
-      const result = await executeDeploymentsOperations.call(
-        mockExecuteFunctions,
-        [{ json: {} }],
-      );
-
-      expect(result).toEqual([
-        { json: mockResponse, pairedItem: { item: 0 } },
-      ]);
-    });
-  });
-
-  describe('getDeployment', () => {
-    it('should get deployment successfully', async () => {
-      const mockResponse = {
-        id: 'dep123',
-        status: 'success',
-        entryPointUrl: 'https://example.com/main.ts',
-        createdAt: '2023-01-01T00:00:00Z'
-      };
-
-      mockExecuteFunctions.getNodeParameter.mockImplementation((param: string) => {
-        switch (param) {
-          case 'operation': return 'getDeployment';
-          case 'deploymentId': return 'dep123';
-          default: return undefined;
-        }
-      });
-
-      mockExecuteFunctions.helpers.httpRequest.mockResolvedValue(mockResponse);
-
-      const result = await executeDeploymentsOperations.call(
-        mockExecuteFunctions,
-        [{ json: {} }],
-      );
-
-      expect(result).toEqual([
-        { json: mockResponse, pairedItem: { item: 0 } },
-      ]);
-    });
-  });
-
-  describe('deleteDeployment', () => {
-    it('should delete deployment successfully', async () => {
-      const mockResponse = { success: true };
-
-      mockExecuteFunctions.getNodeParameter.mockImplementation((param: string) => {
-        switch (param) {
-          case 'operation': return 'deleteDeployment';
-          case 'deploymentId': return 'dep123';
-          default: return undefined;
-        }
-      });
-
-      mockExecuteFunctions.helpers.httpRequest.mockResolvedValue(mockResponse);
-
-      const result = await executeDeploymentsOperations.call(
-        mockExecuteFunctions,
-        [{ json: {} }],
-      );
-
-      expect(result).toEqual([
-        { json: mockResponse, pairedItem: { item: 0 } },
-      ]);
-    });
-  });
-
-  describe('getDeploymentLogs', () => {
-    it('should get deployment logs successfully', async () => {
-      const mockResponse = {
-        logs: [
-          { timestamp: '2023-01-01T00:00:00Z', message: 'Starting deployment' },
-          { timestamp: '2023-01-01T00:01:00Z', message: 'Deployment completed' }
-        ]
-      };
-
-      mockExecuteFunctions.getNodeParameter.mockImplementation((param: string) => {
-        switch (param) {
-          case 'operation': return 'getDeploymentLogs';
-          case 'deploymentId': return 'dep123';
-          case 'since': return '2023-01-01T00:00:00Z';
-          case 'until': return '2023-01-01T23:59:59Z';
-          default: return '';
-        }
-      });
-
-      mockExecuteFunctions.helpers.httpRequest.mockResolvedValue(mockResponse);
-
-      const result = await executeDeploymentsOperations.call(
-        mockExecuteFunctions,
-        [{ json: {} }],
-      );
-
-      expect(result).toEqual([
-        { json: mockResponse, pairedItem: { item: 0 } },
-      ]);
-    });
-  });
-
-  describe('error handling', () => {
-    it('should handle API errors', async () => {
-      mockExecuteFunctions.getNodeParameter.mockImplementation((param: string) => {
-        switch (param) {
-          case 'operation': return 'getDeployment';
-          case 'deploymentId': return 'invalid-id';
-          default: return undefined;
-        }
-      });
-
-      const error = new Error('Deployment not found');
-      (error as any).httpCode = '404';
-      mockExecuteFunctions.helpers.httpRequest.mockRejectedValue(error);
-
-      await expect(
-        executeDeploymentsOperations.call(mockExecuteFunctions, [{ json: {} }]),
-      ).rejects.toThrow();
-    });
-
-    it('should continue on fail when enabled', async () => {
-      mockExecuteFunctions.continueOnFail.mockReturnValue(true);
-      mockExecuteFunctions.getNodeParameter.mockImplementation((param: string) => {
-        switch (param) {
-          case 'operation': return 'getDeployment';
-          case 'deploymentId': return 'invalid-id';
-          default: return undefined;
-        }
-      });
-
-      mockExecuteFunctions.helpers.httpRequest.mockRejectedValue(
-        new Error('Network error'),
-      );
-
-      const result = await executeDeploymentsOperations.call(
-        mockExecuteFunctions,
-        [{ json: {} }],
-      );
-
-      expect(result).toEqual([
-        { json: { error: 'Network error' }, pairedItem: { item: 0 } },
-      ]);
-    });
-  });
-});
-
-describe('Domains Resource', () => {
-  let mockExecuteFunctions: any;
-
-  beforeEach(() => {
-    mockExecuteFunctions = {
-      getNodeParameter: jest.fn(),
-      getCredentials: jest.fn().mockResolvedValue({
-        apiKey: 'test-api-key',
-        baseUrl: 'https://api.deno.com/v1',
-      }),
-      getInputData: jest.fn().mockReturnValue([{ json: {} }]),
-      getNode: jest.fn().mockReturnValue({ name: 'Test Node' }),
-      continueOnFail: jest.fn().mockReturnValue(false),
-      helpers: {
-        httpRequest: jest.fn(),
-        requestWithAuthentication: jest.fn(),
-      },
-    };
-  });
-
-  describe('listDomains', () => {
-    it('should list domains for a project successfully', async () => {
-      const mockResponse = {
-        domains: [
-          {
-            id: 'domain-123',
-            domain: 'example.com',
-            status: 'verified',
-            certificateType: 'automatic',
-          },
-        ],
-      };
-
-      mockExecuteFunctions.getNodeParameter.mockImplementation((paramName: string) => {
-        if (paramName === 'operation') return 'listDomains';
-        if (paramName === 'projectId') return 'project-123';
-        return '';
-      });
-      mockExecuteFunctions.helpers.httpRequest.mockResolvedValue(mockResponse);
-
-      const result = await executeDomainsOperations.call(mockExecuteFunctions, [{ json: {} }]);
-
-      expect(mockExecuteFunctions.helpers.httpRequest).toHaveBeenCalledWith({
-        method: 'GET',
-        url: 'https://api.deno.com/v1/projects/project-123/domains',
-        headers: {
-          Authorization: 'Bearer test-api-key',
-          'Content-Type': 'application/json',
-        },
-        json: true,
-      });
+      expect(result).toHaveLength(1);
       expect(result[0].json).toEqual(mockResponse);
     });
 
-    it('should handle errors when listing domains', async () => {
-      mockExecuteFunctions.getNodeParameter.mockImplementation((paramName: string) => {
-        if (paramName === 'operation') return 'listDomains';
-        if (paramName === 'projectId') return 'project-123';
-        return '';
-      });
+    it('should handle errors when listing KV databases', async () => {
+      mockExecuteFunctions.getNodeParameter
+        .mockReturnValueOnce('listKvDatabases')
+        .mockReturnValueOnce('org123');
       mockExecuteFunctions.helpers.httpRequest.mockRejectedValue(new Error('API Error'));
       mockExecuteFunctions.continueOnFail.mockReturnValue(true);
 
-      const result = await executeDomainsOperations.call(mockExecuteFunctions, [{ json: {} }]);
+      const result = await executeKvDatabaseOperations.call(
+        mockExecuteFunctions,
+        [{ json: {} }]
+      );
 
+      expect(result).toHaveLength(1);
       expect(result[0].json.error).toBe('API Error');
     });
   });
 
-  describe('addDomain', () => {
-    it('should add a domain to a project successfully', async () => {
-      const mockResponse = {
-        id: 'domain-123',
-        domain: 'example.com',
-        status: 'pending',
-        certificateType: 'automatic',
-      };
-
-      mockExecuteFunctions.getNodeParameter.mockImplementation((paramName: string) => {
-        if (paramName === 'operation') return 'addDomain';
-        if (paramName === 'projectId') return 'project-123';
-        if (paramName === 'domain') return 'example.com';
-        return '';
-      });
-      mockExecuteFunctions.helpers.httpRequest.mockResolvedValue(mockResponse);
-
-      const result = await executeDomainsOperations.call(mockExecuteFunctions, [{ json: {} }]);
-
-      expect(mockExecuteFunctions.helpers.httpRequest).toHaveBeenCalledWith({
-        method: 'POST',
-        url: 'https://api.deno.com/v1/projects/project-123/domains',
-        headers: {
-          Authorization: 'Bearer test-api-key',
-          'Content-Type': 'application/json',
-        },
-        body: {
-          domain: 'example.com',
-        },
-        json: true,
-      });
-      expect(result[0].json).toEqual(mockResponse);
-    });
-  });
-
-  describe('getDomain', () => {
-    it('should get domain details successfully', async () => {
-      const mockResponse = {
-        id: 'domain-123',
-        domain: 'example.com',
-        status: 'verified',
-        certificateType: 'automatic',
-        verificationRecords: [],
-      };
-
-      mockExecuteFunctions.getNodeParameter.mockImplementation((paramName: string) => {
-        if (paramName === 'operation') return 'getDomain';
-        if (paramName === 'domainId') return 'domain-123';
-        return '';
-      });
-      mockExecuteFunctions.helpers.httpRequest.mockResolvedValue(mockResponse);
-
-      const result = await executeDomainsOperations.call(mockExecuteFunctions, [{ json: {} }]);
-
-      expect(mockExecuteFunctions.helpers.httpRequest).toHaveBeenCalledWith({
-        method: 'GET',
-        url: 'https://api.deno.com/v1/domains/domain-123',
-        headers: {
-          Authorization: 'Bearer test-api-key',
-          'Content-Type': 'application/json',
-        },
-        json: true,
-      });
-      expect(result[0].json).toEqual(mockResponse);
-    });
-  });
-
-  describe('updateDomain', () => {
-    it('should update domain settings successfully', async () => {
-      const mockResponse = {
-        id: 'domain-123',
-        domain: 'example.com',
-        status: 'verified',
-        certificateType: 'manual',
-      };
-
-      mockExecuteFunctions.getNodeParameter.mockImplementation((paramName: string) => {
-        if (paramName === 'operation') return 'updateDomain';
-        if (paramName === 'domainId') return 'domain-123';
-        if (paramName === 'certificateType') return 'manual';
-        return '';
-      });
-      mockExecuteFunctions.helpers.httpRequest.mockResolvedValue(mockResponse);
-
-      const result = await executeDomainsOperations.call(mockExecuteFunctions, [{ json: {} }]);
-
-      expect(mockExecuteFunctions.helpers.httpRequest).toHaveBeenCalledWith({
-        method: 'PATCH',
-        url: 'https://api.deno.com/v1/domains/domain-123',
-        headers: {
-          Authorization: 'Bearer test-api-key',
-          'Content-Type': 'application/json',
-        },
-        body: {
-          certificateType: 'manual',
-        },
-        json: true,
-      });
-      expect(result[0].json).toEqual(mockResponse);
-    });
-  });
-
-  describe('deleteDomain', () => {
-    it('should delete domain successfully', async () => {
-      const mockResponse = { success: true };
-
-      mockExecuteFunctions.getNodeParameter.mockImplementation((paramName: string) => {
-        if (paramName === 'operation') return 'deleteDomain';
-        if (paramName === 'domainId') return 'domain-123';
-        return '';
-      });
-      mockExecuteFunctions.helpers.httpRequest.mockResolvedValue(mockResponse);
-
-      const result = await executeDomainsOperations.call(mockExecuteFunctions, [{ json: {} }]);
-
-      expect(mockExecuteFunctions.helpers.httpRequest).toHaveBeenCalledWith({
-        method: 'DELETE',
-        url: 'https://api.deno.com/v1/domains/domain-123',
-        headers: {
-          Authorization: 'Bearer test-api-key',
-          'Content-Type': 'application/json',
-        },
-        json: true,
-      });
-      expect(result[0].json).toEqual(mockResponse);
-    });
-  });
-
-  describe('verifyDomain', () => {
-    it('should verify domain ownership successfully', async () => {
-      const mockResponse = {
-        id: 'domain-123',
-        domain: 'example.com',
-        status: 'verified',
-        verificationResult: 'success',
-      };
-
-      mockExecuteFunctions.getNodeParameter.mockImplementation((paramName: string) => {
-        if (paramName === 'operation') return 'verifyDomain';
-        if (paramName === 'domainId') return 'domain-123';
-        return '';
-      });
-      mockExecuteFunctions.helpers.httpRequest.mockResolvedValue(mockResponse);
-
-      const result = await executeDomainsOperations.call(mockExecuteFunctions, [{ json: {} }]);
-
-      expect(mockExecuteFunctions.helpers.httpRequest).toHaveBeenCalledWith({
-        method: 'POST',
-        url: 'https://api.deno.com/v1/domains/domain-123/verify',
-        headers: {
-          Authorization: 'Bearer test-api-key',
-          'Content-Type': 'application/json',
-        },
-        json: true,
-      });
-      expect(result[0].json).toEqual(mockResponse);
-    });
-  });
-});
-
-describe('KvDatabases Resource', () => {
-  let mockExecuteFunctions: any;
-
-  beforeEach(() => {
-    mockExecuteFunctions = {
-      getNodeParameter: jest.fn(),
-      getCredentials: jest.fn().mockResolvedValue({
-        apiKey: 'test-api-key',
-        baseUrl: 'https://api.deno.com/v1',
-      }),
-      getInputData: jest.fn().mockReturnValue([{ json: {} }]),
-      getNode: jest.fn().mockReturnValue({ name: 'Test Node' }),
-      continueOnFail: jest.fn().mockReturnValue(false),
-      helpers: {
-        httpRequest: jest.fn(),
-        requestWithAuthentication: jest.fn(),
-      },
-    };
-  });
-
-  describe('listDatabases', () => {
-    it('should list KV databases successfully', async () => {
-      const mockResponse = {
-        databases: [
-          { id: 'db1', description: 'Test DB 1' },
-          { id: 'db2', description: 'Test DB 2' }
-        ]
-      };
-
-      mockExecuteFunctions.getNodeParameter.mockImplementation((paramName: string) => {
-        if (paramName === 'operation') return 'listDatabases';
-        if (paramName === 'orgId') return 'org123';
-        return '';
-      });
-
-      mockExecuteFunctions.helpers.httpRequest.mockResolvedValue(mockResponse);
-
-      const items = [{ json: {} }];
-      const result = await executeKvDatabasesOperations.call(mockExecuteFunctions, items);
-
-      expect(result).toHaveLength(1);
-      expect(result[0].json).toEqual(mockResponse);
-      expect(mockExecuteFunctions.helpers.httpRequest).toHaveBeenCalledWith({
-        method: 'GET',
-        url: 'https://api.deno.com/v1/organizations/org123/databases',
-        headers: {
-          'Authorization': 'Bearer test-api-key',
-          'Content-Type': 'application/json',
-        },
-        json: true,
-      });
-    });
-
-    it('should handle listDatabases error', async () => {
-      mockExecuteFunctions.getNodeParameter.mockImplementation((paramName: string) => {
-        if (paramName === 'operation') return 'listDatabases';
-        if (paramName === 'orgId') return 'org123';
-        return '';
-      });
-
-      mockExecuteFunctions.helpers.httpRequest.mockRejectedValue(new Error('API Error'));
-
-      const items = [{ json: {} }];
-      
-      await expect(
-        executeKvDatabasesOperations.call(mockExecuteFunctions, items)
-      ).rejects.toThrow();
-    });
-  });
-
-  describe('createDatabase', () => {
+  describe('createKvDatabase', () => {
     it('should create KV database successfully', async () => {
-      const mockResponse = {
-        id: 'db123',
-        description: 'New test database'
-      };
-
-      mockExecuteFunctions.getNodeParameter.mockImplementation((paramName: string) => {
-        if (paramName === 'operation') return 'createDatabase';
-        if (paramName === 'orgId') return 'org123';
-        if (paramName === 'description') return 'New test database';
-        return '';
-      });
-
+      const mockResponse = { id: 'db1', description: 'New DB' };
+      mockExecuteFunctions.getNodeParameter
+        .mockReturnValueOnce('createKvDatabase')
+        .mockReturnValueOnce('org123')
+        .mockReturnValueOnce('New DB');
       mockExecuteFunctions.helpers.httpRequest.mockResolvedValue(mockResponse);
 
-      const items = [{ json: {} }];
-      const result = await executeKvDatabasesOperations.call(mockExecuteFunctions, items);
+      const result = await executeKvDatabaseOperations.call(
+        mockExecuteFunctions,
+        [{ json: {} }]
+      );
 
       expect(result).toHaveLength(1);
       expect(result[0].json).toEqual(mockResponse);
-      expect(mockExecuteFunctions.helpers.httpRequest).toHaveBeenCalledWith({
-        method: 'POST',
-        url: 'https://api.deno.com/v1/organizations/org123/databases',
-        headers: {
-          'Authorization': 'Bearer test-api-key',
-          'Content-Type': 'application/json',
-        },
-        body: { description: 'New test database' },
-        json: true,
-      });
     });
   });
 
-  describe('getDatabase', () => {
+  describe('getKvDatabase', () => {
     it('should get KV database successfully', async () => {
-      const mockResponse = {
-        id: 'db123',
-        description: 'Test database',
-        createdAt: '2023-01-01T00:00:00Z'
-      };
-
-      mockExecuteFunctions.getNodeParameter.mockImplementation((paramName: string) => {
-        if (paramName === 'operation') return 'getDatabase';
-        if (paramName === 'databaseId') return 'db123';
-        return '';
-      });
-
+      const mockResponse = { id: 'db1', description: 'Test DB' };
+      mockExecuteFunctions.getNodeParameter
+        .mockReturnValueOnce('getKvDatabase')
+        .mockReturnValueOnce('db1');
       mockExecuteFunctions.helpers.httpRequest.mockResolvedValue(mockResponse);
 
-      const items = [{ json: {} }];
-      const result = await executeKvDatabasesOperations.call(mockExecuteFunctions, items);
+      const result = await executeKvDatabaseOperations.call(
+        mockExecuteFunctions,
+        [{ json: {} }]
+      );
 
       expect(result).toHaveLength(1);
       expect(result[0].json).toEqual(mockResponse);
-      expect(mockExecuteFunctions.helpers.httpRequest).toHaveBeenCalledWith({
-        method: 'GET',
-        url: 'https://api.deno.com/v1/databases/db123',
-        headers: {
-          'Authorization': 'Bearer test-api-key',
-          'Content-Type': 'application/json',
-        },
-        json: true,
-      });
     });
   });
 
-  describe('deleteDatabase', () => {
+  describe('updateKvDatabase', () => {
+    it('should update KV database successfully', async () => {
+      const mockResponse = { id: 'db1', description: 'Updated DB' };
+      mockExecuteFunctions.getNodeParameter
+        .mockReturnValueOnce('updateKvDatabase')
+        .mockReturnValueOnce('db1')
+        .mockReturnValueOnce('Updated DB');
+      mockExecuteFunctions.helpers.httpRequest.mockResolvedValue(mockResponse);
+
+      const result = await executeKvDatabaseOperations.call(
+        mockExecuteFunctions,
+        [{ json: {} }]
+      );
+
+      expect(result).toHaveLength(1);
+      expect(result[0].json).toEqual(mockResponse);
+    });
+  });
+
+  describe('deleteKvDatabase', () => {
     it('should delete KV database successfully', async () => {
       const mockResponse = { success: true };
-
-      mockExecuteFunctions.getNodeParameter.mockImplementation((paramName: string) => {
-        if (paramName === 'operation') return 'deleteDatabase';
-        if (paramName === 'databaseId') return 'db123';
-        return '';
-      });
-
+      mockExecuteFunctions.getNodeParameter
+        .mockReturnValueOnce('deleteKvDatabase')
+        .mockReturnValueOnce('db1');
       mockExecuteFunctions.helpers.httpRequest.mockResolvedValue(mockResponse);
 
-      const items = [{ json: {} }];
-      const result = await executeKvDatabasesOperations.call(mockExecuteFunctions, items);
+      const result = await executeKvDatabaseOperations.call(
+        mockExecuteFunctions,
+        [{ json: {} }]
+      );
 
       expect(result).toHaveLength(1);
       expect(result[0].json).toEqual(mockResponse);
-      expect(mockExecuteFunctions.helpers.httpRequest).toHaveBeenCalledWith({
-        method: 'DELETE',
-        url: 'https://api.deno.com/v1/databases/db123',
-        headers: {
-          'Authorization': 'Bearer test-api-key',
-          'Content-Type': 'application/json',
-        },
-        json: true,
-      });
-    });
-  });
-
-  describe('createSnapshot', () => {
-    it('should create database snapshot successfully', async () => {
-      const mockResponse = {
-        snapshotId: 'snap123',
-        status: 'created'
-      };
-
-      mockExecuteFunctions.getNodeParameter.mockImplementation((paramName: string) => {
-        if (paramName === 'operation') return 'createSnapshot';
-        if (paramName === 'databaseId') return 'db123';
-        return '';
-      });
-
-      mockExecuteFunctions.helpers.httpRequest.mockResolvedValue(mockResponse);
-
-      const items = [{ json: {} }];
-      const result = await executeKvDatabasesOperations.call(mockExecuteFunctions, items);
-
-      expect(result).toHaveLength(1);
-      expect(result[0].json).toEqual(mockResponse);
-      expect(mockExecuteFunctions.helpers.httpRequest).toHaveBeenCalledWith({
-        method: 'POST',
-        url: 'https://api.deno.com/v1/databases/db123/snapshot',
-        headers: {
-          'Authorization': 'Bearer test-api-key',
-          'Content-Type': 'application/json',
-        },
-        json: true,
-      });
     });
   });
 });
 
-describe('EnvironmentVariables Resource', () => {
-  let mockExecuteFunctions: any;
+describe('Environment Variable Resource', () => {
+	let mockExecuteFunctions: any;
 
-  beforeEach(() => {
-    mockExecuteFunctions = {
-      getNodeParameter: jest.fn(),
-      getCredentials: jest.fn().mockResolvedValue({
-        apiKey: 'test-api-key',
-        baseUrl: 'https://api.deno.com/v1',
-      }),
-      getInputData: jest.fn().mockReturnValue([{ json: {} }]),
-      getNode: jest.fn().mockReturnValue({ name: 'Test Node' }),
-      continueOnFail: jest.fn().mockReturnValue(false),
-      helpers: {
-        httpRequest: jest.fn(),
-        requestWithAuthentication: jest.fn(),
-      },
-    };
-  });
+	beforeEach(() => {
+		mockExecuteFunctions = {
+			getNodeParameter: jest.fn(),
+			getCredentials: jest.fn().mockResolvedValue({
+				bearerToken: 'test-token',
+				baseUrl: 'https://api.deno.com/v1',
+			}),
+			getInputData: jest.fn().mockReturnValue([{ json: {} }]),
+			getNode: jest.fn().mockReturnValue({ name: 'Test Node' }),
+			continueOnFail: jest.fn().mockReturnValue(false),
+			helpers: {
+				httpRequest: jest.fn(),
+			},
+		};
+	});
 
-  describe('listEnvironmentVariables', () => {
-    it('should list environment variables successfully', async () => {
-      const mockResponse = [
-        { key: 'NODE_ENV', value: 'production' },
-        { key: 'API_URL', value: 'https://api.example.com' }
-      ];
+	describe('listEnvironmentVariables', () => {
+		it('should list environment variables successfully', async () => {
+			const mockResponse = [{ key: 'API_KEY', value: 'secret' }];
+			mockExecuteFunctions.getNodeParameter
+				.mockReturnValueOnce('listEnvironmentVariables')
+				.mockReturnValueOnce('test-project-id');
+			mockExecuteFunctions.helpers.httpRequest.mockResolvedValue(mockResponse);
 
-      mockExecuteFunctions.getNodeParameter.mockImplementation((paramName: string, itemIndex: number) => {
-        if (paramName === 'operation') return 'listEnvironmentVariables';
-        if (paramName === 'projectId') return 'test-project-id';
-        return '';
-      });
+			const result = await executeEnvironmentVariableOperations.call(
+				mockExecuteFunctions,
+				[{ json: {} }],
+			);
 
-      mockExecuteFunctions.helpers.httpRequest.mockResolvedValue(mockResponse);
+			expect(result).toEqual([{ json: mockResponse, pairedItem: { item: 0 } }]);
+			expect(mockExecuteFunctions.helpers.httpRequest).toHaveBeenCalledWith({
+				method: 'GET',
+				url: 'https://api.deno.com/v1/projects/test-project-id/env',
+				headers: {
+					Authorization: 'Bearer test-token',
+					'Content-Type': 'application/json',
+				},
+				json: true,
+			});
+		});
 
-      const result = await executeEnvironmentVariablesOperations.call(mockExecuteFunctions, [{ json: {} }]);
+		it('should handle errors when listing environment variables', async () => {
+			mockExecuteFunctions.getNodeParameter
+				.mockReturnValueOnce('listEnvironmentVariables')
+				.mockReturnValueOnce('test-project-id');
+			mockExecuteFunctions.helpers.httpRequest.mockRejectedValue(new Error('API Error'));
+			mockExecuteFunctions.continueOnFail.mockReturnValue(true);
 
-      expect(result).toEqual([{ json: mockResponse, pairedItem: { item: 0 } }]);
-      expect(mockExecuteFunctions.helpers.httpRequest).toHaveBeenCalledWith({
-        method: 'GET',
-        url: 'https://api.deno.com/v1/projects/test-project-id/env',
-        headers: {
-          'Authorization': 'Bearer test-api-key',
-          'Content-Type': 'application/json',
-        },
-        json: true,
-      });
-    });
-  });
+			const result = await executeEnvironmentVariableOperations.call(
+				mockExecuteFunctions,
+				[{ json: {} }],
+			);
 
-  describe('createEnvironmentVariable', () => {
-    it('should create environment variable successfully', async () => {
-      const mockResponse = { key: 'NEW_VAR', value: 'new-value', id: '123' };
+			expect(result).toEqual([{ json: { error: 'API Error' }, pairedItem: { item: 0 } }]);
+		});
+	});
 
-      mockExecuteFunctions.getNodeParameter.mockImplementation((paramName: string, itemIndex: number) => {
-        if (paramName === 'operation') return 'createEnvironmentVariable';
-        if (paramName === 'projectId') return 'test-project-id';
-        if (paramName === 'key') return 'NEW_VAR';
-        if (paramName === 'value') return 'new-value';
-        return '';
-      });
+	describe('createEnvironmentVariable', () => {
+		it('should create environment variable successfully', async () => {
+			const mockResponse = { key: 'NEW_VAR', value: 'new-value' };
+			mockExecuteFunctions.getNodeParameter
+				.mockReturnValueOnce('createEnvironmentVariable')
+				.mockReturnValueOnce('test-project-id')
+				.mockReturnValueOnce('NEW_VAR')
+				.mockReturnValueOnce('new-value');
+			mockExecuteFunctions.helpers.httpRequest.mockResolvedValue(mockResponse);
 
-      mockExecuteFunctions.helpers.httpRequest.mockResolvedValue(mockResponse);
+			const result = await executeEnvironmentVariableOperations.call(
+				mockExecuteFunctions,
+				[{ json: {} }],
+			);
 
-      const result = await executeEnvironmentVariablesOperations.call(mockExecuteFunctions, [{ json: {} }]);
+			expect(result).toEqual([{ json: mockResponse, pairedItem: { item: 0 } }]);
+			expect(mockExecuteFunctions.helpers.httpRequest).toHaveBeenCalledWith({
+				method: 'POST',
+				url: 'https://api.deno.com/v1/projects/test-project-id/env',
+				headers: {
+					Authorization: 'Bearer test-token',
+					'Content-Type': 'application/json',
+				},
+				body: {
+					key: 'NEW_VAR',
+					value: 'new-value',
+				},
+				json: true,
+			});
+		});
+	});
 
-      expect(result).toEqual([{ json: mockResponse, pairedItem: { item: 0 } }]);
-      expect(mockExecuteFunctions.helpers.httpRequest).toHaveBeenCalledWith({
-        method: 'POST',
-        url: 'https://api.deno.com/v1/projects/test-project-id/env',
-        headers: {
-          'Authorization': 'Bearer test-api-key',
-          'Content-Type': 'application/json',
-        },
-        body: {
-          key: 'NEW_VAR',
-          value: 'new-value',
-        },
-        json: true,
-      });
-    });
-  });
+	describe('getEnvironmentVariable', () => {
+		it('should get environment variable successfully', async () => {
+			const mockResponse = { key: 'API_KEY', value: 'secret' };
+			mockExecuteFunctions.getNodeParameter
+				.mockReturnValueOnce('getEnvironmentVariable')
+				.mockReturnValueOnce('test-project-id')
+				.mockReturnValueOnce('API_KEY');
+			mockExecuteFunctions.helpers.httpRequest.mockResolvedValue(mockResponse);
 
-  describe('getEnvironmentVariable', () => {
-    it('should get environment variable successfully', async () => {
-      const mockResponse = { key: 'NODE_ENV', value: 'production' };
+			const result = await executeEnvironmentVariableOperations.call(
+				mockExecuteFunctions,
+				[{ json: {} }],
+			);
 
-      mockExecuteFunctions.getNodeParameter.mockImplementation((paramName: string, itemIndex: number) => {
-        if (paramName === 'operation') return 'getEnvironmentVariable';
-        if (paramName === 'projectId') return 'test-project-id';
-        if (paramName === 'key') return 'NODE_ENV';
-        return '';
-      });
+			expect(result).toEqual([{ json: mockResponse, pairedItem: { item: 0 } }]);
+			expect(mockExecuteFunctions.helpers.httpRequest).toHaveBeenCalledWith({
+				method: 'GET',
+				url: 'https://api.deno.com/v1/projects/test-project-id/env/API_KEY',
+				headers: {
+					Authorization: 'Bearer test-token',
+					'Content-Type': 'application/json',
+				},
+				json: true,
+			});
+		});
+	});
 
-      mockExecuteFunctions.helpers.httpRequest.mockResolvedValue(mockResponse);
+	describe('updateEnvironmentVariable', () => {
+		it('should update environment variable successfully', async () => {
+			const mockResponse = { key: 'API_KEY', value: 'updated-secret' };
+			mockExecuteFunctions.getNodeParameter
+				.mockReturnValueOnce('updateEnvironmentVariable')
+				.mockReturnValueOnce('test-project-id')
+				.mockReturnValueOnce('API_KEY')
+				.mockReturnValueOnce('updated-secret');
+			mockExecuteFunctions.helpers.httpRequest.mockResolvedValue(mockResponse);
 
-      const result = await executeEnvironmentVariablesOperations.call(mockExecuteFunctions, [{ json: {} }]);
+			const result = await executeEnvironmentVariableOperations.call(
+				mockExecuteFunctions,
+				[{ json: {} }],
+			);
 
-      expect(result).toEqual([{ json: mockResponse, pairedItem: { item: 0 } }]);
-      expect(mockExecuteFunctions.helpers.httpRequest).toHaveBeenCalledWith({
-        method: 'GET',
-        url: 'https://api.deno.com/v1/projects/test-project-id/env/NODE_ENV',
-        headers: {
-          'Authorization': 'Bearer test-api-key',
-          'Content-Type': 'application/json',
-        },
-        json: true,
-      });
-    });
-  });
+			expect(result).toEqual([{ json: mockResponse, pairedItem: { item: 0 } }]);
+			expect(mockExecuteFunctions.helpers.httpRequest).toHaveBeenCalledWith({
+				method: 'PATCH',
+				url: 'https://api.deno.com/v1/projects/test-project-id/env/API_KEY',
+				headers: {
+					Authorization: 'Bearer test-token',
+					'Content-Type': 'application/json',
+				},
+				body: {
+					value: 'updated-secret',
+				},
+				json: true,
+			});
+		});
+	});
 
-  describe('updateEnvironmentVariable', () => {
-    it('should update environment variable successfully', async () => {
-      const mockResponse = { key: 'NODE_ENV', value: 'development' };
+	describe('deleteEnvironmentVariable', () => {
+		it('should delete environment variable successfully', async () => {
+			const mockResponse = { success: true };
+			mockExecuteFunctions.getNodeParameter
+				.mockReturnValueOnce('deleteEnvironmentVariable')
+				.mockReturnValueOnce('test-project-id')
+				.mockReturnValueOnce('API_KEY');
+			mockExecuteFunctions.helpers.httpRequest.mockResolvedValue(mockResponse);
 
-      mockExecuteFunctions.getNodeParameter.mockImplementation((paramName: string, itemIndex: number) => {
-        if (paramName === 'operation') return 'updateEnvironmentVariable';
-        if (paramName === 'projectId') return 'test-project-id';
-        if (paramName === 'key') return 'NODE_ENV';
-        if (paramName === 'value') return 'development';
-        return '';
-      });
+			const result = await executeEnvironmentVariableOperations.call(
+				mockExecuteFunctions,
+				[{ json: {} }],
+			);
 
-      mockExecuteFunctions.helpers.httpRequest.mockResolvedValue(mockResponse);
+			expect(result).toEqual([{ json: mockResponse, pairedItem: { item: 0 } }]);
+			expect(mockExecuteFunctions.helpers.httpRequest).toHaveBeenCalledWith({
+				method: 'DELETE',
+				url: 'https://api.deno.com/v1/projects/test-project-id/env/API_KEY',
+				headers: {
+					Authorization: 'Bearer test-token',
+					'Content-Type': 'application/json',
+				},
+				json: true,
+			});
+		});
+	});
+});
 
-      const result = await executeEnvironmentVariablesOperations.call(mockExecuteFunctions, [{ json: {} }]);
+describe('Organization Resource', () => {
+	let mockExecuteFunctions: any;
 
-      expect(result).toEqual([{ json: mockResponse, pairedItem: { item: 0 } }]);
-      expect(mockExecuteFunctions.helpers.httpRequest).toHaveBeenCalledWith({
-        method: 'PATCH',
-        url: 'https://api.deno.com/v1/projects/test-project-id/env/NODE_ENV',
-        headers: {
-          'Authorization': 'Bearer test-api-key',
-          'Content-Type': 'application/json',
-        },
-        body: {
-          value: 'development',
-        },
-        json: true,
-      });
-    });
-  });
+	beforeEach(() => {
+		mockExecuteFunctions = {
+			getNodeParameter: jest.fn(),
+			getCredentials: jest.fn().mockResolvedValue({
+				bearerToken: 'test-token',
+				baseUrl: 'https://api.deno.com/v1',
+			}),
+			getInputData: jest.fn().mockReturnValue([{ json: {} }]),
+			getNode: jest.fn().mockReturnValue({ name: 'Test Node' }),
+			continueOnFail: jest.fn().mockReturnValue(false),
+			helpers: {
+				httpRequest: jest.fn(),
+				requestWithAuthentication: jest.fn(),
+			},
+		};
+	});
 
-  describe('deleteEnvironmentVariable', () => {
-    it('should delete environment variable successfully', async () => {
-      const mockResponse = { success: true };
+	test('listOrganizations should return organizations list', async () => {
+		const mockOrganizations = [
+			{ id: 'org1', name: 'Organization 1' },
+			{ id: 'org2', name: 'Organization 2' },
+		];
+		
+		mockExecuteFunctions.getNodeParameter.mockReturnValue('listOrganizations');
+		mockExecuteFunctions.helpers.httpRequest.mockResolvedValue(mockOrganizations);
 
-      mockExecuteFunctions.getNodeParameter.mockImplementation((paramName: string, itemIndex: number) => {
-        if (paramName === 'operation') return 'deleteEnvironmentVariable';
-        if (paramName === 'projectId') return 'test-project-id';
-        if (paramName === 'key') return 'OLD_VAR';
-        return '';
-      });
+		const result = await executeOrganizationOperations.call(
+			mockExecuteFunctions,
+			[{ json: {} }],
+		);
 
-      mockExecuteFunctions.helpers.httpRequest.mockResolvedValue(mockResponse);
+		expect(result).toEqual([
+			{ json: mockOrganizations, pairedItem: { item: 0 } },
+		]);
+		expect(mockExecuteFunctions.helpers.httpRequest).toHaveBeenCalledWith({
+			method: 'GET',
+			url: 'https://api.deno.com/v1/organizations',
+			headers: {
+				'Authorization': 'Bearer test-token',
+				'Content-Type': 'application/json',
+			},
+			json: true,
+		});
+	});
 
-      const result = await executeEnvironmentVariablesOperations.call(mockExecuteFunctions, [{ json: {} }]);
+	test('getOrganization should return organization details', async () => {
+		const mockOrganization = { id: 'org1', name: 'Test Organization' };
+		
+		mockExecuteFunctions.getNodeParameter
+			.mockReturnValueOnce('getOrganization')
+			.mockReturnValueOnce('org1');
+		mockExecuteFunctions.helpers.httpRequest.mockResolvedValue(mockOrganization);
 
-      expect(result).toEqual([{ json: mockResponse, pairedItem: { item: 0 } }]);
-      expect(mockExecuteFunctions.helpers.httpRequest).toHaveBeenCalledWith({
-        method: 'DELETE',
-        url: 'https://api.deno.com/v1/projects/test-project-id/env/OLD_VAR',
-        headers: {
-          'Authorization': 'Bearer test-api-key',
-          'Content-Type': 'application/json',
-        },
-        json: true,
-      });
-    });
-  });
+		const result = await executeOrganizationOperations.call(
+			mockExecuteFunctions,
+			[{ json: {} }],
+		);
 
-  describe('error handling', () => {
-    it('should handle API errors', async () => {
-      mockExecuteFunctions.getNodeParameter.mockImplementation((paramName: string, itemIndex: number) => {
-        if (paramName === 'operation') return 'listEnvironmentVariables';
-        if (paramName === 'projectId') return 'invalid-project';
-        return '';
-      });
+		expect(result).toEqual([
+			{ json: mockOrganization, pairedItem: { item: 0 } },
+		]);
+		expect(mockExecuteFunctions.helpers.httpRequest).toHaveBeenCalledWith({
+			method: 'GET',
+			url: 'https://api.deno.com/v1/organizations/org1',
+			headers: {
+				'Authorization': 'Bearer test-token',
+				'Content-Type': 'application/json',
+			},
+			json: true,
+		});
+	});
 
-      const apiError = new Error('Project not found');
-      (apiError as any).httpCode = 404;
-      mockExecuteFunctions.helpers.httpRequest.mockRejectedValue(apiError);
+	test('updateOrganization should update organization', async () => {
+		const mockUpdatedOrganization = { id: 'org1', name: 'Updated Organization' };
+		
+		mockExecuteFunctions.getNodeParameter
+			.mockReturnValueOnce('updateOrganization')
+			.mockReturnValueOnce('org1')
+			.mockReturnValueOnce('Updated Organization');
+		mockExecuteFunctions.helpers.httpRequest.mockResolvedValue(mockUpdatedOrganization);
 
-      await expect(executeEnvironmentVariablesOperations.call(mockExecuteFunctions, [{ json: {} }])).rejects.toThrow();
-    });
+		const result = await executeOrganizationOperations.call(
+			mockExecuteFunctions,
+			[{ json: {} }],
+		);
 
-    it('should continue on fail when enabled', async () => {
-      mockExecuteFunctions.continueOnFail.mockReturnValue(true);
-      mockExecuteFunctions.getNodeParameter.mockImplementation((paramName: string, itemIndex: number) => {
-        if (paramName === 'operation') return 'listEnvironmentVariables';
-        if (paramName === 'projectId') return 'invalid-project';
-        return '';
-      });
+		expect(result).toEqual([
+			{ json: mockUpdatedOrganization, pairedItem: { item: 0 } },
+		]);
+		expect(mockExecuteFunctions.helpers.httpRequest).toHaveBeenCalledWith({
+			method: 'PATCH',
+			url: 'https://api.deno.com/v1/organizations/org1',
+			headers: {
+				'Authorization': 'Bearer test-token',
+				'Content-Type': 'application/json',
+			},
+			body: {
+				name: 'Updated Organization',
+			},
+			json: true,
+		});
+	});
 
-      mockExecuteFunctions.helpers.httpRequest.mockRejectedValue(new Error('API Error'));
+	test('listMembers should return organization members', async () => {
+		const mockMembers = [
+			{ id: 'user1', email: 'user1@example.com', role: 'admin' },
+			{ id: 'user2', email: 'user2@example.com', role: 'member' },
+		];
+		
+		mockExecuteFunctions.getNodeParameter
+			.mockReturnValueOnce('listMembers')
+			.mockReturnValueOnce('org1');
+		mockExecuteFunctions.helpers.httpRequest.mockResolvedValue(mockMembers);
 
-      const result = await executeEnvironmentVariablesOperations.call(mockExecuteFunctions, [{ json: {} }]);
+		const result = await executeOrganizationOperations.call(
+			mockExecuteFunctions,
+			[{ json: {} }],
+		);
 
-      expect(result).toEqual([{ json: { error: 'API Error' }, pairedItem: { item: 0 } }]);
-    });
-  });
+		expect(result).toEqual([
+			{ json: mockMembers, pairedItem: { item: 0 } },
+		]);
+		expect(mockExecuteFunctions.helpers.httpRequest).toHaveBeenCalledWith({
+			method: 'GET',
+			url: 'https://api.deno.com/v1/organizations/org1/members',
+			headers: {
+				'Authorization': 'Bearer test-token',
+				'Content-Type': 'application/json',
+			},
+			json: true,
+		});
+	});
+
+	test('inviteMember should invite new member', async () => {
+		const mockInvite = { id: 'invite1', email: 'newuser@example.com', role: 'member' };
+		
+		mockExecuteFunctions.getNodeParameter
+			.mockReturnValueOnce('inviteMember')
+			.mockReturnValueOnce('org1')
+			.mockReturnValueOnce('newuser@example.com')
+			.mockReturnValueOnce('member');
+		mockExecuteFunctions.helpers.httpRequest.mockResolvedValue(mockInvite);
+
+		const result = await executeOrganizationOperations.call(
+			mockExecuteFunctions,
+			[{ json: {} }],
+		);
+
+		expect(result).toEqual([
+			{ json: mockInvite, pairedItem: { item: 0 } },
+		]);
+		expect(mockExecuteFunctions.helpers.httpRequest).toHaveBeenCalledWith({
+			method: 'POST',
+			url: 'https://api.deno.com/v1/organizations/org1/invites',
+			headers: {
+				'Authorization': 'Bearer test-token',
+				'Content-Type': 'application/json',
+			},
+			body: {
+				email: 'newuser@example.com',
+				role: 'member',
+			},
+			json: true,
+		});
+	});
+
+	test('should handle errors gracefully', async () => {
+		mockExecuteFunctions.getNodeParameter.mockReturnValue('listOrganizations');
+		mockExecuteFunctions.helpers.httpRequest.mockRejectedValue(new Error('API Error'));
+		mockExecuteFunctions.continueOnFail.mockReturnValue(true);
+
+		const result = await executeOrganizationOperations.call(
+			mockExecuteFunctions,
+			[{ json: {} }],
+		);
+
+		expect(result).toEqual([
+			{ json: { error: 'API Error' }, pairedItem: { item: 0 } },
+		]);
+	});
+
+	test('should throw error for unknown operation', async () => {
+		mockExecuteFunctions.getNodeParameter.mockReturnValue('unknownOperation');
+
+		await expect(
+			executeOrganizationOperations.call(mockExecuteFunctions, [{ json: {} }]),
+		).rejects.toThrow('Unknown operation: unknownOperation');
+	});
 });
 });
